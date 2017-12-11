@@ -22,6 +22,7 @@ type JenkinsPlugin struct {
 	source_path   string
 	template_dir  string
 	template_file string
+	features      map[string]FeaturesInstanceStruct
 	templates_def YamlTemplates // See templates.go. templates.yaml structure.
 	sources       map[string]TmplSource
 	templates     map[string]TmplSource

@@ -27,7 +27,10 @@ func (r *CreateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 }
 
 // We assume template source file is loaded.
-func (r *JenkinsPlugin) create_jenkins_sources(instance_name string, ret *goforjj.PluginData) (err error) {
+func (r *JenkinsPlugin) create_jenkins_sources(instance_name string, features map[string]FeaturesInstanceStruct,
+	ret *goforjj.PluginData) (err error) {
+
+	r.features = features
 
 	if err = r.DefineSources(); err != nil {
 		log.Printf(ret.Errorf("%s", err))

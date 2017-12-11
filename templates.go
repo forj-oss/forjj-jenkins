@@ -116,7 +116,13 @@ func (p *JenkinsPlugin) LoadTemplatesDef() error {
 // Load list of files to copy and files to generate
 func (p *JenkinsPlugin) DefineSources() error {
 	// load all features
-	p.yaml.Features = make([]string, 0, 5)
+	p.yaml.Features = make([]string, 0, len(p.templates_def.Features.Common) + len(p.features) + len(p.templates_def.Features.Deploy[p.yaml.Deploy.Deployment.To]))
+
+	// Load features from Forjfile given.
+	for name := range p.features {
+		p.yaml.Features = append(p.yaml.Features, name)
+	}
+
 	for _, f := range p.templates_def.Features.Common {
 		if v, err := Evaluate(f, p.Model()); err != nil {
 			return fmt.Errorf("Unable to evaluate '%s'. %s", f, err)

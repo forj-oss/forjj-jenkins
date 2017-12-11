@@ -24,7 +24,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 		return
 	}
 
-	if p.create_jenkins_sources(req.Forj.ForjjInstanceName, ret) != nil {
+	if p.create_jenkins_sources(req.Forj.ForjjInstanceName, req.Objects.Features, ret) != nil {
 		return
 	}
 
@@ -66,7 +66,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	if p.update_projects(req, ret, &updated) != nil {
 		return
 	}
-	if p.update_jenkins_sources(req.Forj.ForjjInstanceName, ret, &updated) != nil {
+	if p.update_jenkins_sources(req.Forj.ForjjInstanceName, req.Objects.Features, ret, &updated) != nil {
 		return
 	}
 	if p.save_yaml(ret, &updated) != nil {

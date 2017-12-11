@@ -26,7 +26,11 @@ func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 	return p, true
 }
 
-func (r *JenkinsPlugin) update_jenkins_sources(instance_name string, ret *goforjj.PluginData, updated *bool) (err error) {
+func (r *JenkinsPlugin) update_jenkins_sources(instance_name string, features map[string]FeaturesInstanceStruct,
+	ret *goforjj.PluginData, updated *bool) (err error) {
+
+	r.features = features
+
 	if err = r.DefineSources(); err != nil {
 		log.Printf(ret.Errorf("%s", err))
 		return
