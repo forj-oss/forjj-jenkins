@@ -104,6 +104,9 @@ objects:
         required: true
       options:
         help: "List of feature option to use"
+      type:
+        help: "Type of feature. Can be plugin or feature. Default is feature."
+        default: feature
   projects:
     default-actions: ["add", "change", "remove"]
     identified_by_flag: name

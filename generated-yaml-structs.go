@@ -61,6 +61,7 @@ type AppInstanceStruct struct {
 type FeaturesInstanceStruct struct {
 	Name    string `json:"name"`    // name of the jenkins feature
 	Options string `json:"options"` // List of feature option to use
+	Type    string `json:"type"`    // Type of feature. Can be plugin or feature. Default is feature.
 }
 
 // Object projects groups structure
@@ -194,7 +195,7 @@ const YamlDesc = "---\n" +
 	"        flags:\n" +
 	"          # Information we can define for the Dockerfile.\n" +
 	"          from-image:\n" +
-	"            help: \"Base Docker image tag name to use in Dockerfile. Must respect [server/repo/]name.\"\n" +
+	"            help: \"Base Docker image tag name to use in Dockerfile(FROM). Must respect [[server/]repo/]name.\"\n" +
 	"            default: forjdevops/jenkins-dood\n" +
 	"          from-image-version:\n" +
 	"            help: \"Base Docker image tag version to use in Dockerfile. By default, it uses 'latest'.\"\n" +
@@ -204,7 +205,7 @@ const YamlDesc = "---\n" +
 	"        flags:\n" +
 	"          name:\n" +
 	"            help: \"Docker image name for your final generated Jenkins Image. Do not set the Server or Repo name. Use final-docker-registry-server and final-docker-repo-name.\"\n" +
-	"            default: jenkins\n" +
+	"            default: \"{{ .Forjfile.ForjSettings.Organization | ToLower }}-jenkins\"\n" +
 	"          version:\n" +
 	"            help: \"Docker image tag version for your generated Jenkins Image.\"\n" +
 	"          registry-server:\n" +
@@ -212,6 +213,7 @@ const YamlDesc = "---\n" +
 	"            default: hub.docker.com\n" +
 	"          registry-repo-name:\n" +
 	"            help: \"Docker Repository Name where your image will be pushed. If not set, no push will be done.\"\n" +
+	"            default: \"{{ .Forjfile.ForjSettings.Organization | ToLower }}\"\n" +
 	"      deploy:\n" +
 	"        flags:\n" +
 	"          to:\n" +
@@ -261,6 +263,9 @@ const YamlDesc = "---\n" +
 	"        required: true\n" +
 	"      options:\n" +
 	"        help: \"List of feature option to use\"\n" +
+	"      type:\n" +
+	"        help: \"Type of feature. Can be plugin or feature. Default is feature.\"\n" +
+	"        default: feature\n" +
 	"  projects:\n" +
 	"    default-actions: [\"add\", \"change\", \"remove\"]\n" +
 	"    identified_by_flag: name\n" +

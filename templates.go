@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"github.com/forj-oss/goforjj"
 )
 
 const template_file = "templates.yaml"
@@ -119,8 +120,12 @@ func (p *JenkinsPlugin) DefineSources() error {
 	p.yaml.Features = make([]string, 0, len(p.templates_def.Features.Common) + len(p.features) + len(p.templates_def.Features.Deploy[p.yaml.Deploy.Deployment.To]))
 
 	// Load features from Forjfile given.
-	for name := range p.features {
-		p.yaml.Features = append(p.yaml.Features, name)
+	for name, feature := range p.features {
+		feature_type := feature.Type
+		if ok, _ := goforjj.InArray(feature_type, []string{"feature", "plugin"}) ; ! ok {
+			feature_type = feature
+		}
+		p.yaml.Features = append(p.yaml.Features, feature_type + ":" + name)
 	}
 
 	for _, f := range p.templates_def.Features.Common {
