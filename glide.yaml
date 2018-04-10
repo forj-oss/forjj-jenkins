@@ -1,4 +1,4 @@
-package: forjj-contribs/ci/jenkins
+package: forjj-jenkins
 import:
 - package: github.com/forj-oss/forjj-modules
   subpackages:
