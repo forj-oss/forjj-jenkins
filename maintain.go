@@ -31,7 +31,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	mount := r.Forj.ForjjDeployMount
 	auths := NewDockerAuths(r.Objects.App[instance].RegistryAuth)
 
-	src := path.Join(mount, instance)
+	src := path.Join(mount, r.Forj.ForjjDeploymentEnv, instance)
 	if _, err := os.Stat(path.Join(src, jenkins_file)); err == nil {
 		p := newPlugin("", src)
 		if !p.load_yaml(ret) {

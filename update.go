@@ -20,7 +20,7 @@ func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 	}
 
 	srcPath := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
-	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjInstanceName)
+	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
 	p = newPlugin(srcPath, deployPath)
 

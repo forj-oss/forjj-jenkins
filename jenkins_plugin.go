@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/forj-oss/goforjj"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
+
+	"github.com/forj-oss/goforjj"
+	"gopkg.in/yaml.v2"
 )
 
 type JenkinsPluginModel struct {
@@ -18,11 +20,11 @@ type JenkinsPluginModel struct {
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
-	yaml          YamlJenkins   // jenkins.yaml generated source file
-	source_path   string        // Source Path
-	deployPath    string        // Deployment Path
-	deployEnv     string        // Deployment environment where files have to be generated.
-	InstanceName  string        // Instance name where files have to be generated.
+	yaml          YamlJenkins // jenkins.yaml generated source file
+	source_path   string      // Source Path
+	deployPath    string      // Deployment Path
+	deployEnv     string      // Deployment environment where files have to be generated.
+	InstanceName  string      // Instance name where files have to be generated.
 	template_dir  string
 	template_file string
 	templates_def YamlTemplates // See templates.go. templates.yaml structure.
@@ -211,6 +213,16 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 func (p *JenkinsPlugin) save_yaml(ret *goforjj.PluginData, status *bool) (_ error) {
 	file := path.Join(p.source_path, jenkins_file)
 
+	if f, err := os.Stat(p.source_path); err != nil {
+		if err := os.MkdirAll(p.source_path, 0755); err != nil {
+			return err
+		}
+	} else {
+		if !f.IsDir() {
+			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", p.source_path))
+		}
+	}
+
 	orig_md5, _ := md5sum(file)
 	d, err := yaml.Marshal(&p.yaml)
 	if err != nil {
@@ -229,8 +241,8 @@ func (p *JenkinsPlugin) save_yaml(ret *goforjj.PluginData, status *bool) (_ erro
 	}
 	// Be careful to not introduce the local mount which in containers can be totally different (due to docker -v)
 	ret.AddFile(goforjj.FilesSource, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	ret.StatusAdd("Source '%s' instance saved (%s).", p.yaml.Forjj.InstanceName, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	log.Printf("Source '%s' instance saved.", file)
+	ret.StatusAdd("Source: '%s' instance saved (%s).", p.yaml.Forjj.InstanceName, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
+	log.Printf("Source: '%s' instance saved.", file)
 	IsUpdated(status)
 	return
 }

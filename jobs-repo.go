@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/forj-oss/goforjj"
 	"log"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/forj-oss/goforjj"
 )
 
 type Projects struct {
@@ -78,7 +79,7 @@ func (p *Project) Add() error {
 // Generates Jobs-dsl files in the given checked-out GIT repository.
 func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *goforjj.PluginData, status *bool) (_ error) {
 	template_dir := jp.template_dir
-	repo_path := jp.source_path
+	repo_path := jp.deployPath
 
 	if f, err := os.Stat(repo_path); err != nil {
 		return err
@@ -106,13 +107,13 @@ func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *gofor
 	for name, prj := range p.List {
 		name = strings.Replace(name, "-", "_", -1)
 		if u, err := tmpl.Generate(prj.Model(jp), template_dir, jobs_dsl_path, name+".groovy"); err != nil {
-			log.Printf("Unable to generate '%s'. %s",
+			log.Printf("Deploy: Unable to generate '%s'. %s",
 				path.Join(jobs_dsl_path, name+".groovy"), ret.Errorf("%s", err))
 			return err
 		} else if u {
 			IsUpdated(status)
-			ret.AddFile(goforjj.FilesDeploy, path.Join(instance_name, jobs_dsl_path, name+".groovy"))
-			log.Printf(ret.StatusAdd("Project '%s' (%s) generated", name, path.Join(p.DslPath, name+".groovy")))
+			ret.AddFile(goforjj.FilesDeploy, path.Join(instance_name,  p.DslPath, name+".groovy"))
+			log.Printf(ret.StatusAdd("Deploy: Project '%s' (%s) generated", name, path.Join(p.DslPath, name+".groovy")))
 		}
 	}
 	return nil
