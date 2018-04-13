@@ -1,5 +1,5 @@
 hash: 5f3efd9b18afc71a4bfa359d480fe21882e580d6be1df9d447a2d3bc7cfa0f23
-updated: 2018-04-10T19:20:07.133916394Z
+updated: 2018-04-13T07:53:02.070050331Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -17,7 +17,7 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: 22b3a83025bf214a188389229cfc97edc608cdda
+  version: afb76b4fea15c7e5340700a1bba629f0a72f6ff9
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux

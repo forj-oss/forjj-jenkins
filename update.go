@@ -4,10 +4,11 @@
 package main
 
 import (
-	"github.com/forj-oss/goforjj"
 	"log"
 	"os"
 	"path"
+
+	"github.com/forj-oss/goforjj"
 )
 
 // Return ok if the jenkins instance exist
@@ -18,9 +19,10 @@ func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 		return
 	}
 
-	src_path := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
+	srcPath := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
+	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjInstanceName)
 
-	p = new_plugin(src_path)
+	p = newPlugin(srcPath, deployPath)
 
 	ret.StatusAdd("environment checked.")
 	return p, true
@@ -33,16 +35,16 @@ func (r *JenkinsPlugin) update_jenkins_sources(instance_name string, ret *goforj
 	}
 
 	log.Print("Start copying source files...")
-	if err = r.copy_source_files(instance_name, ret, updated); err != nil {
+	if err = r.copy_source_files(ret, updated); err != nil {
 		return
 	}
 
 	log.Print("Start Generating source files...")
-	if err = r.generate_source_files(instance_name, ret, updated); err != nil {
+	if err = r.generate_source_files(ret, updated); err != nil {
 		return
 	}
 
-	if err = r.generate_jobsdsl(instance_name, ret, updated); err != nil {
+	if err = r.generate_jobsdsl(ret, updated); err != nil {
 		return
 	}
 

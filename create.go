@@ -15,36 +15,42 @@ import (
 func (r *CreateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsPlugin, httpCode int) {
 	log.Printf("Checking Jenkins source code existence.")
 	src := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
+	deploy := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjInstanceName)
 	if _, err := os.Stat(path.Join(src, jenkins_file)); err == nil {
 		log.Printf(ret.Errorf("Unable to create the jenkins source code for instance name '%s' which already exist.\nUse 'update' to update it (or update %s), and 'maintain' to update jenkins according to his configuration.", r.Forj.ForjjInstanceName, src))
 		return nil, 419 // Abort message returned to forjj.
 	}
 
-	p = new_plugin(src)
+	p = newPlugin(src, deploy)
 
 	log.Printf(ret.StatusAdd("environment checked."))
 	return
 }
 
-// We assume template source file is loaded.
-func (r *JenkinsPlugin) create_jenkins_sources(instance_name string, ret *goforjj.PluginData) (err error) {
+// setEnv set the deployment environment where deploy files have to be generated.
+func (r *JenkinsPlugin) setEnv(deployEnv, instanceName string) {
+	r.deployEnv = deployEnv
+	r.InstanceName = instanceName
+}
 
+// We assume template source file is loaded.
+func (r *JenkinsPlugin) create_jenkins_sources(ret *goforjj.PluginData) (err error) {
 	if err = r.DefineSources(); err != nil {
 		log.Printf(ret.Errorf("%s", err))
 		return err
 	}
 
 	log.Print("Start copying source files...")
-	if err = r.copy_source_files(instance_name, ret, nil); err != nil {
+	if err = r.copy_source_files(ret, nil); err != nil {
 		return
 	}
 
 	log.Print("Start Generating source files...")
-	if err = r.generate_source_files(instance_name, ret, nil); err != nil {
+	if err = r.generate_source_files(ret, nil); err != nil {
 		return
 	}
 
-	if err = r.generate_jobsdsl(instance_name, ret, nil); err != nil {
+	if err = r.generate_jobsdsl(ret, nil); err != nil {
 		return
 	}
 
@@ -61,11 +67,11 @@ func (jp *JenkinsPlugin) add_projects(req *CreateReq, ret *goforjj.PluginData) e
 
 // generate_jobsdsl generate any missing job-dsl source file.
 // TODO: Support for different Repository path that Forjj have to checkout appropriately.
-func (p *JenkinsPlugin) generate_jobsdsl(instance_name string, ret *goforjj.PluginData, status *bool) (err error) {
+func (p *JenkinsPlugin) generate_jobsdsl(ret *goforjj.PluginData, status *bool) (err error) {
 	if p.yaml.Projects == nil {
 		return
 	}
-	if err = p.yaml.Projects.Generates(p, instance_name, ret, status); err != nil {
+	if err = p.yaml.Projects.Generates(p, p.InstanceName, ret, status); err != nil {
 		log.Print(ret.Errorf("%s", err))
 	}
 	return

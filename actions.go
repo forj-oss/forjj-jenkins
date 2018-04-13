@@ -2,9 +2,10 @@
 package main
 
 import (
-	"github.com/forj-oss/goforjj"
 	"log"
 	"net/http"
+
+	"github.com/forj-oss/goforjj"
 )
 
 // Do creating plugin task
@@ -24,7 +25,9 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 		return
 	}
 
-	if p.create_jenkins_sources(req.Forj.ForjjInstanceName, ret) != nil {
+	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+
+	if p.create_jenkins_sources(ret) != nil {
 		return
 	}
 
@@ -59,6 +62,8 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	p.yaml.Forjj.OrganizationName = req.Forj.ForjjOrganization
 	p.yaml.Forjj.InfraUpstream = req.Forj.ForjjInfraUpstream
 
+	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+
 	var updated bool
 	if p.update_from(req, ret, &updated) != nil {
 		return
@@ -81,7 +86,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	return
 }
 
-// Do maintaining plugin task
+// DoMaintain Do maintaining plugin task
 // req_data contains the request data posted by forjj. Structure generated from 'jenkins.yaml'.
 // ret_data contains the response structure to return back to forjj.
 //

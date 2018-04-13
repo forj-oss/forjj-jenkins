@@ -18,8 +18,11 @@ type JenkinsPluginModel struct {
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
-	yaml          YamlJenkins // jenkins.yaml generated source file
-	source_path   string
+	yaml          YamlJenkins   // jenkins.yaml generated source file
+	source_path   string        // Source Path
+	deployPath    string        // Deployment Path
+	deployEnv     string        // Deployment environment where files have to be generated.
+	InstanceName  string        // Instance name where files have to be generated.
 	template_dir  string
 	template_file string
 	templates_def YamlTemplates // See templates.go. templates.yaml structure.
@@ -49,10 +52,11 @@ type ForjjStruct struct {
 
 const jenkins_file = "forjj-jenkins.yaml"
 
-func new_plugin(src string) (p *JenkinsPlugin) {
+func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 	p = new(JenkinsPlugin)
 
 	p.source_path = src
+	p.deployPath = deploy
 	p.template_dir = *cliApp.params.template_dir
 	return
 }
@@ -224,9 +228,9 @@ func (p *JenkinsPlugin) save_yaml(ret *goforjj.PluginData, status *bool) (_ erro
 		return err
 	}
 	// Be careful to not introduce the local mount which in containers can be totally different (due to docker -v)
-	ret.AddFile(path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	ret.StatusAdd("'%s' instance saved (%s).", p.yaml.Forjj.InstanceName, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	log.Printf("'%s' instance saved.", file)
+	ret.AddFile(goforjj.FilesSource, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
+	ret.StatusAdd("Source '%s' instance saved (%s).", p.yaml.Forjj.InstanceName, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
+	log.Printf("Source '%s' instance saved.", file)
 	IsUpdated(status)
 	return
 }

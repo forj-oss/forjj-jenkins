@@ -28,12 +28,12 @@ func (r *MaintainReq) check_source_existence(ret *goforjj.PluginData) (status bo
 // Instantiate Instance given by the request.
 func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ bool) {
 	instance := r.Forj.ForjjInstanceName
-	mount := r.Forj.ForjjSourceMount
+	mount := r.Forj.ForjjDeployMount
 	auths := NewDockerAuths(r.Objects.App[instance].RegistryAuth)
 
 	src := path.Join(mount, instance)
 	if _, err := os.Stat(path.Join(src, jenkins_file)); err == nil {
-		p := new_plugin(src)
+		p := newPlugin("", src)
 		if !p.load_yaml(ret) {
 			return
 		}
@@ -52,7 +52,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 			ret.Errorf("Unable to enter in '%s'. %s", src, err)
 			return
 		}
-		if !p.InstantiateInstance(instance, auths, ret) {
+		if !p.instantiateInstance(instance, auths, ret) {
 			return false
 		}
 	} else {
@@ -61,7 +61,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	return true
 }
 
-func (p *JenkinsPlugin) InstantiateInstance(instance string, auths *DockerAuths, ret *goforjj.PluginData) (status bool) {
+func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths, ret *goforjj.PluginData) (status bool) {
 	run, found := p.templates_def.Run[p.yaml.Deploy.Deployment.To]
 	if !found {
 		ret.Errorf("Deployment '%s' command not found.", p.yaml.Deploy.Deployment.To)
