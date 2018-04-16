@@ -1,5 +1,5 @@
 hash: 5f3efd9b18afc71a4bfa359d480fe21882e580d6be1df9d447a2d3bc7cfa0f23
-updated: 2018-04-13T07:53:02.070050331Z
+updated: 2018-04-16T08:08:06.54450621Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -17,7 +17,7 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: afb76b4fea15c7e5340700a1bba629f0a72f6ff9
+  version: ecd27e4e025ea1511b3d588c62aa481c1f228f58
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -35,11 +35,11 @@ imports:
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: golang.org/x/net
-  version: 61147c48b25b599e5b561d2e9c4f3e1ef489ca41
+  version: 500e7a4f953ddaf55d316b4d3adc516aa0379622
   subpackages:
   - publicsuffix
 - name: golang.org/x/sys
-  version: 3b87a42e500a6dc65dae1a55d0b641295971163e
+  version: 2281fa97ef7b0c26324634d5a22f04babdac8713
   subpackages:
   - unix
 - name: gopkg.in/alecthomas/kingpin.v2

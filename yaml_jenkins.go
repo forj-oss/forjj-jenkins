@@ -2,7 +2,6 @@ package main
 
 // Used for the jenkins yaml source and generate template data.
 type YamlJenkins struct {
-	Forjj ForjjStruct
 	// Settings SettingsStruct
 	Deploy       DeployApp
 	Features     []string

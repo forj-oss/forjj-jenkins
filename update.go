@@ -20,6 +20,12 @@ func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 	}
 
 	srcPath := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
+
+	log.Print("Checking Jenkins deploy path.")
+	if _, err := os.Stat(path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv)); err != nil {
+		ret.Errorf("Unable to update jenkins instances. '%s'/'%s' is inexistent or innacessible. %s", r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, err)
+		return
+	}
 	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
 	p = newPlugin(srcPath, deployPath)
@@ -28,7 +34,7 @@ func (r *UpdateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsP
 	return p, true
 }
 
-func (r *JenkinsPlugin) update_jenkins_sources(instance_name string, ret *goforjj.PluginData, updated *bool) (err error) {
+func (r *JenkinsPlugin) update_jenkins_sources(ret *goforjj.PluginData, updated *bool) (err error) {
 	if err = r.DefineSources(); err != nil {
 		log.Printf(ret.Errorf("%s", err))
 		return

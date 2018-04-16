@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/forj-oss/goforjj"
 	"log"
 	"os"
 	"path"
+
+	"github.com/forj-oss/goforjj"
 )
 
 // Return ok if the jenkins instance exist
@@ -32,44 +33,42 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	auths := NewDockerAuths(r.Objects.App[instance].RegistryAuth)
 
 	src := path.Join(mount, r.Forj.ForjjDeploymentEnv, instance)
-	if _, err := os.Stat(path.Join(src, jenkins_file)); err == nil {
-		p := newPlugin("", src)
-		if !p.load_yaml(ret) {
-			return
-		}
-
-		// Load templates.yml to get the list of deployment commands.
-		if err := p.LoadTemplatesDef(); err != nil {
-			ret.Errorf("%s", err)
-			return
-		}
-
-		if !p.GetMaintainData(instance, req, ret) {
-			return false
-		}
-		ret.StatusAdd("Maintaining '%s'", instance)
-		if err := os.Chdir(src); err != nil {
-			ret.Errorf("Unable to enter in '%s'. %s", src, err)
-			return
-		}
-		if !p.instantiateInstance(instance, auths, ret) {
-			return false
-		}
-	} else {
+	if _, err := os.Stat(path.Join(src, jenkins_file)); err != nil {
 		log.Printf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
+		return true
+	}
+	p := newPlugin("", src)
+
+	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
+
+	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+
+	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret) {
+		return
+	}
+
+	// Load templates.yml to get the list of deployment commands.
+	if !p.loadRunYaml(ret) {
+		return
+	}
+
+	if !p.GetMaintainData(req, ret) {
+		return
+	}
+	ret.StatusAdd("Maintaining '%s'", p.InstanceName)
+	if err := os.Chdir(src); err != nil {
+		ret.Errorf("Unable to enter in '%s'. %s", src, err)
+		return
+	}
+	if !p.instantiateInstance(instance, auths, ret) {
+		return
 	}
 	return true
 }
 
 func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths, ret *goforjj.PluginData) (status bool) {
-	run, found := p.templates_def.Run[p.yaml.Deploy.Deployment.To]
-	if !found {
-		ret.Errorf("Deployment '%s' command not found.", p.yaml.Deploy.Deployment.To)
-		return
-	}
-
 	// start a command as described by the source code.
-	if run.RunCommand == "" {
+	if p.run.RunCommand == "" {
 		log.Printf(ret.Errorf("Unable to instantiate to %s. Deploy Command is empty.", p.yaml.Deploy.Deployment.To))
 		return
 	}
@@ -81,7 +80,7 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
-	log.Printf(ret.StatusAdd("Running '%s'", run.RunCommand))
+	log.Printf(ret.StatusAdd("Running '%s'", p.run.RunCommand))
 
 	env := os.Environ()
 	if v := os.Getenv("DOOD_SRC"); v != "" {
@@ -90,7 +89,7 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 	}
 
 	model := p.Model()
-	for key, env_to_set := range run.Env {
+	for key, env_to_set := range p.run.Env {
 		if env_to_set.If != "" {
 			// check if If evaluation return something or not. if not, the environment key won't be created.
 			if v, err := Evaluate(env_to_set.If, model); err != nil {
@@ -109,11 +108,11 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
-	s, err := run_cmd("/bin/sh", env, "-c", run.RunCommand)
+	s, err := run_cmd("/bin/sh", env, "-c", p.run.RunCommand)
 	log.Printf(ret.StatusAdd(string(s)))
 	if err != nil {
-		cur_dir, _ := os.Getwd()
-		log.Printf(ret.Errorf("%s (pwd: %s)", err, cur_dir))
+		curDir, _ := os.Getwd()
+		log.Printf(ret.Errorf("%s (pwd: %s)", err, curDir))
 	}
 
 	return true
