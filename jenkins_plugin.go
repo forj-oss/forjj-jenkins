@@ -14,7 +14,7 @@ import (
 )
 
 type JenkinsPluginModel struct {
-	Source YamlJenkins
+	Creds map[string]string
 }
 
 var JP_Model *JenkinsPluginModel
@@ -60,25 +60,32 @@ func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 	return
 }
 
+// GetMaintainData prepare the Model with maintain data (usually credentials)
 func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginData) (_ bool) {
+	// TODO:
+	// Get the list of exclusive maintain data in Creds to facilitate the copy to Model
+	// The MaintainData is already centralized...
+
+	model := p.Model()
 	if v, found := req.Objects.App[p.InstanceName]; !found {
-		ret.Errorf("Request issue. App instance '%s' is missing in list of object.")
+		ret.Errorf("Request issue. App instance '%s' is missing in list of object.", p.InstanceName)
 		return
 	} else {
 		if p.yaml.Deploy.Ssl.Certificate == "" && v.SslPrivateKey != "" {
 			ret.Errorf("A private key is given, but there is no Certificate data.")
 			return
 		}
-		p.yaml.Deploy.Ssl.SetKey(v.SslPrivateKey)
+		if model.Creds == nil {
+			model.Creds = make(map[string]string)
+		}
+
+		model.Creds["SslPrivateKey"] = v.SslPrivateKey
 
 		if v.AdminPwd != "" {
-			p.yaml.SetAdminPwd(v.AdminPwd)
+			model.Creds["AdminPwd"] = v.AdminPwd
 		}
 
-		if err := p.yaml.GithubUser.setPassword(v.GithubUserPassword); err != nil {
-			ret.Errorf("%s", err)
-			return
-		}
+		model.Creds["GithubUserPassword"] = v.GithubUserPassword
 	}
 	return true
 }

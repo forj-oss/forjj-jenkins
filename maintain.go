@@ -12,9 +12,9 @@ import (
 func (r *MaintainReq) check_source_existence(ret *goforjj.PluginData) (status bool) {
 	log.Print("Checking Jenkins source code path existence.")
 
-	src_path := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
-	if _, err := os.Stat(path.Join(src_path, jenkins_file)); err != nil {
-		log.Printf(ret.Errorf("Unable to maintain instance name '%s' without source code.\n"+
+	src_path := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
+	if _, err := os.Stat(path.Join(src_path, maintain_cmds_file)); err != nil {
+		log.Printf(ret.Errorf("Unable to maintain instance name '%s' without deploy code.\n"+
 			"Use update to update it, commit, push and retry. %s.", src_path, err))
 		return
 	}
@@ -33,19 +33,13 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	auths := NewDockerAuths(r.Objects.App[instance].RegistryAuth)
 
 	src := path.Join(mount, r.Forj.ForjjDeploymentEnv, instance)
-	if _, err := os.Stat(path.Join(src, jenkins_file)); err != nil {
+	if _, err := os.Stat(path.Join(src, maintain_cmds_file)); err != nil {
 		log.Printf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
 		return true
 	}
 	p := newPlugin("", src)
 
-	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
-
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
-
-	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret) {
-		return
-	}
 
 	// Load templates.yml to get the list of deployment commands.
 	if !p.loadRunYaml(ret) {

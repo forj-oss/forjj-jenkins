@@ -70,7 +70,6 @@ func (p *JenkinsPlugin) Model() *JenkinsPluginModel {
 		return JP_Model
 	}
 	JP_Model = new(JenkinsPluginModel)
-	JP_Model.Source = p.yaml
 	return JP_Model
 }
 
