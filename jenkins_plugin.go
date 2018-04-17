@@ -9,14 +9,20 @@ import (
 	"os"
 	"path"
 
+	"github.com/forj-oss/forjj/utils"
 	"github.com/forj-oss/goforjj"
 	"gopkg.in/yaml.v2"
 )
 
-type JenkinsPluginModel struct {
-	Creds map[string]string
+type JenkinsPluginSourceModel struct {
+	Source YamlJenkins
 }
 
+type JenkinsPluginModel struct {
+	Creds  map[string]string
+}
+
+var JPS_Model *JenkinsPluginSourceModel
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
@@ -56,7 +62,11 @@ func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 
 	p.source_path = src
 	p.deployPath = deploy
-	p.template_dir = *cliApp.params.template_dir
+	if v, err := utils.Abs(*cliApp.params.template_dir); err != nil {
+		log.Printf("Unable to set template dir with '%s'. %s", *cliApp.params.template_dir, err)
+	} else {
+		p.template_dir = v
+	}
 	return
 }
 

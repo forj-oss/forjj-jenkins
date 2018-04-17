@@ -4,6 +4,9 @@ import:
   subpackages:
   - trace
 - package: github.com/forj-oss/goforjj
+- package: github.com/forj-oss/forjj
+  subpackages:
+  - utils
 - package: github.com/gorilla/mux
   version: ^1.3.0
 - package: github.com/kr/text
