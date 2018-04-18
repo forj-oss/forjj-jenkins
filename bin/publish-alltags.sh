@@ -19,7 +19,7 @@ then
    exit 1
 fi
 
-TAG_BASE="$(eval "echo $(awk '$1 ~ /image:/ { print $2 }' $(basename $BUILD_ENV_PROJECT).yaml)")"
+TAG_BASE="$(eval "echo $(awk '$1 ~ /image:/ { print $2 }' jenkins.yaml)")"
 
 if [ ! -f releases.lst ]
 then
@@ -34,7 +34,7 @@ fi
 
 case "$1" in
   release-it )
-    VERSION=$(eval "echo $(awk '$1 ~ /version:/ { print $2 }' $(basename $BUILD_ENV_PROJECT).yaml)")
+    VERSION=$(eval "echo $(awk '$1 ~ /version:/ { print $2 }' jenkins.yaml)")
     if [ "$(git tag -l $VERSION)" = "" ]
     then
        echo "Unable to publish a release version. git tag missing"
@@ -61,7 +61,7 @@ cat releases.lst | while read LINE
 do
    [[ "$LINE" =~ ^# ]] && continue
    TAGS="$(echo "$LINE" | awk -F'|' '{ print $2 }' | sed 's/,/ /g')"
-   echo "=============== Building devops/forjj-$(basename $BUILD_ENV_PROJECT)"
+   echo "=============== Building devops/$(basename $BUILD_ENV_PROJECT)"
    $(dirname $0)/build.sh
    echo "=============== Publishing tags"
    for TAG in $TAGS
