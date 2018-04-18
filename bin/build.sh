@@ -8,7 +8,7 @@ then
    exit 1
 fi
 
-TAG="-t $(awk '$0 ~ /^ *image: ".*"$/ { print $0 }' $(basename $BUILD_ENV_PROJECT).yaml | sed 's/^ *image: "*\(.*\)".*$/\1/g')"
+TAG="-t $(awk '$0 ~ /^ *image: ".*"$/ { print $0 }' jenkins.yaml | sed 's/^ *image: "*\(.*\)".*$/\1/g')"
 
 cd $BUILD_ENV_PROJECT
 
@@ -17,7 +17,7 @@ then
    PROXY="--build-arg http_proxy=$http_proxy --build-arg https_proxy=$http_proxy --build-arg no_proxy=$no_proxy"
 fi
 
-create-build-env.sh
+create-go-build-env.sh
 
 if [ "$GOPATH" = "" ]
 then
