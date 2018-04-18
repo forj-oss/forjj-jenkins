@@ -4,25 +4,37 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"github.com/forj-oss/goforjj"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
+
+	"github.com/forj-oss/goforjj"
+	"gopkg.in/yaml.v2"
 )
 
-type JenkinsPluginModel struct {
+type JenkinsPluginSourceModel struct {
 	Source YamlJenkins
 }
 
+type JenkinsPluginModel struct {
+	Creds map[string]string
+}
+
+var JPS_Model *JenkinsPluginSourceModel
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
-	yaml          YamlJenkins // jenkins.yaml generated source file
-	source_path   string
+	yaml          YamlJenkins       // jenkins.<env>.yaml source file per environment.
+	yamlPlugin    YamlJenkinsPlugin // jenkins.yaml source file
+	source_path   string            // Source Path
+	deployPath    string            // Deployment Path
+	deployEnv     string            // Deployment environment where files have to be generated.
+	InstanceName  string            // Instance name where files have to be generated.
 	template_dir  string
 	template_file string
 	templates_def YamlTemplates // See templates.go. templates.yaml structure.
+	run           RunStruct
 	sources       map[string]TmplSource
 	templates     map[string]TmplSource
 }
@@ -41,58 +53,56 @@ type YamlSSLStruct struct {
 	key           string // key for the SSL certificate.
 }
 
-type ForjjStruct struct {
-	InstanceName     string
-	OrganizationName string
-	InfraUpstream    string
-}
-
 const jenkins_file = "forjj-jenkins.yaml"
+const maintain_cmds_file = "maintain-cmd.yaml"
 
-func new_plugin(src string) (p *JenkinsPlugin) {
+func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 	p = new(JenkinsPlugin)
 
 	p.source_path = src
+	p.deployPath = deploy
 	p.template_dir = *cliApp.params.template_dir
 	return
 }
 
-func (p *JenkinsPlugin) GetMaintainData(instance string, req *MaintainReq, ret *goforjj.PluginData) (_ bool) {
-	if v, found := req.Objects.App[instance]; !found {
-		ret.Errorf("Request issue. App instance '%s' is missing in list of object.")
+// GetMaintainData prepare the Model with maintain data (usually credentials)
+func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginData) (_ bool) {
+	// TODO:
+	// Get the list of exclusive maintain data in Creds to facilitate the copy to Model
+	// The MaintainData is already centralized...
+
+	model := p.Model()
+	if v, found := req.Objects.App[p.InstanceName]; !found {
+		ret.Errorf("Request issue. App instance '%s' is missing in list of object.", p.InstanceName)
 		return
 	} else {
 		if p.yaml.Deploy.Ssl.Certificate == "" && v.SslPrivateKey != "" {
 			ret.Errorf("A private key is given, but there is no Certificate data.")
 			return
 		}
-		p.yaml.Deploy.Ssl.SetKey(v.SslPrivateKey)
+		if model.Creds == nil {
+			model.Creds = make(map[string]string)
+		}
+
+		model.Creds["SslPrivateKey"] = v.SslPrivateKey
 
 		if v.AdminPwd != "" {
-			p.yaml.SetAdminPwd(v.AdminPwd)
+			model.Creds["AdminPwd"] = v.AdminPwd
 		}
 
-		if err := p.yaml.GithubUser.setPassword(v.GithubUserPassword); err != nil {
-			ret.Errorf("%s", err)
-			return
-		}
+		model.Creds["GithubUserPassword"] = v.GithubUserPassword
 	}
 	return true
 }
 
 // At create time: create jenkins source from req
 func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (err error) {
-	instance := r.Forj.ForjjInstanceName
-	p.yaml.Forjj.InstanceName = instance
-	p.yaml.Forjj.OrganizationName = r.Forj.ForjjOrganization
-	p.yaml.Forjj.InfraUpstream = r.Forj.ForjjInfraUpstream
-
-	if _, found := r.Objects.App[instance]; !found {
-		err = fmt.Errorf("Request format issue. Unable to find the jenkins instance '%s'", instance)
+	if _, found := r.Objects.App[p.InstanceName]; !found {
+		err = fmt.Errorf("Request format issue. Unable to find the jenkins instance '%s'", p.InstanceName)
 		ret.Errorf("%s", err)
 		return
 	}
-	jenkins_instance := r.Objects.App[instance]
+	jenkins_instance := r.Objects.App[p.InstanceName]
 
 	p.yaml.Deploy.Deployment.SetFrom(&jenkins_instance.DeployStruct)
 	// Initialize deployment data and set default values
@@ -204,18 +214,32 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 	return nil
 }
 
-func (p *JenkinsPlugin) save_yaml(ret *goforjj.PluginData, status *bool) (_ error) {
-	file := path.Join(p.source_path, jenkins_file)
+func (p *JenkinsPlugin) saveYaml(where, fileName string, data interface{}, ret *goforjj.PluginData, status *bool) (_ error) {
+	destPath := p.source_path
+	if where == goforjj.FilesDeploy {
+		destPath = p.deployPath
+	}
+	file := path.Join(destPath, fileName)
 
-	orig_md5, _ := md5sum(file)
-	d, err := yaml.Marshal(&p.yaml)
+	if f, err := os.Stat(destPath); err != nil {
+		if err := os.MkdirAll(destPath, 0755); err != nil {
+			return err
+		}
+	} else {
+		if !f.IsDir() {
+			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", destPath))
+		}
+	}
+
+	origMD5, _ := md5sum(file)
+	d, err := yaml.Marshal(data)
 	if err != nil {
 		ret.Errorf("Unable to encode forjj-jenkins configuration data in yaml. %s", err)
 		return err
 	}
-	final_md5 := md5.New().Sum(d)
+	finalMD5 := md5.New().Sum(d)
 
-	if bytes.Equal(orig_md5, final_md5) {
+	if bytes.Equal(origMD5, finalMD5) {
 		return
 	}
 
@@ -224,26 +248,44 @@ func (p *JenkinsPlugin) save_yaml(ret *goforjj.PluginData, status *bool) (_ erro
 		return err
 	}
 	// Be careful to not introduce the local mount which in containers can be totally different (due to docker -v)
-	ret.AddFile(path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	ret.StatusAdd("'%s' instance saved (%s).", p.yaml.Forjj.InstanceName, path.Join(p.yaml.Forjj.InstanceName, jenkins_file))
-	log.Printf("'%s' instance saved.", file)
+	ret.AddFile(where, path.Join(p.InstanceName, fileName))
+	ret.StatusAdd("%s: '%s' instance saved (%s).", where, p.InstanceName, path.Join(p.InstanceName, fileName))
+	log.Printf("%s: '%s' instance saved.", where, file)
 	IsUpdated(status)
 	return
 }
 
-func (p *JenkinsPlugin) load_yaml(ret *goforjj.PluginData) (status bool) {
-	file := path.Join(p.source_path, jenkins_file)
+func (p *JenkinsPlugin) loadYaml(where, fileName string, data interface{}, ret *goforjj.PluginData) (status bool) {
+	destPath := p.source_path
+	if where == goforjj.FilesDeploy {
+		destPath = p.deployPath
+	}
+	file := path.Join(destPath, fileName)
 
 	log.Printf("Loading '%s'...", file)
 	if d, err := ioutil.ReadFile(file); err != nil {
 		ret.Errorf("Unable to read '%s'. %s", file, err)
 		return
 	} else {
-		if err = yaml.Unmarshal(d, &p.yaml); err != nil {
-			ret.Errorf("Unable to decode forjj-jenkins configuration data from yaml. %s", err)
+		if err = yaml.Unmarshal(d, data); err != nil {
+			ret.Errorf("Unable to decode '%s' configuration data from yaml. %s", fileName, err)
 			return
 		}
 	}
 	log.Printf("'%s' instance loaded.", file)
 	return true
+}
+
+func (p *JenkinsPlugin) saveRunYaml(ret *goforjj.PluginData, status *bool) (_ error) {
+	run, found := p.templates_def.Run[p.yaml.Deploy.Deployment.To]
+	if !found {
+		ret.Errorf("Deployment '%s' command not found.", p.yaml.Deploy.Deployment.To)
+		return
+	}
+
+	return p.saveYaml(goforjj.FilesDeploy, maintain_cmds_file, &run, ret, status)
+}
+
+func (p *JenkinsPlugin) loadRunYaml(ret *goforjj.PluginData) (_ bool) {
+	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.run, ret)
 }

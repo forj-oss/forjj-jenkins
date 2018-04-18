@@ -18,7 +18,7 @@ task_flags:
     forjj-infra:
       help: "Name of the Infra repository to use"
     forjj-instance-name:
-    forjj-source-mount:
+    forjj-deploy-mount:
     forjj-organization:
     debug:
       help: "To activate jenkins debug information"

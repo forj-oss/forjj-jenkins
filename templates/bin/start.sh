@@ -27,8 +27,6 @@ then
    fi
 fi
 
-# For production case, expect
-# $LOGNAME set to {{ .Forjj.OrganizationName }}
 if [ -f run_opts.sh ]
 then
    echo "loading run_opts.sh..."

@@ -2,33 +2,42 @@
 package main
 
 import (
-	"github.com/forj-oss/goforjj"
 	"log"
 	"net/http"
+
+	"github.com/forj-oss/goforjj"
 )
 
-// Do creating plugin task
+// DoCreate Do creating plugin task
 // req_data contains the request data posted by forjj. Structure generated from 'jenkins.yaml'.
 // ret_data contains the response structure to return back to forjj.
 //
 func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
-	var p *JenkinsPlugin
-
-	if pr, code := req.check_source_existence(ret); pr == nil {
+	p, code := req.check_source_existence(ret)
+	if p == nil {
 		return code
-	} else {
-		p = pr
 	}
+
+	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
 
 	if p.initialize_from(req, ret) != nil {
 		return
 	}
 
-	if p.create_jenkins_sources(req.Forj.ForjjInstanceName, ret) != nil {
+	if p.create_jenkins_sources(ret) != nil {
 		return
 	}
 
-	p.save_yaml(ret, nil)
+	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, nil) != nil {
+		return
+	}
+
+	if p.saveYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, nil) != nil {
+		return
+	}
+
+	p.saveRunYaml(ret, nil)
 
 	ret.CommitMessage = "Creating initial jenkins source files as defined by the Forjfile."
 
@@ -41,24 +50,22 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 // forjj-jenkins.yaml is loaded by default.
 //
 func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) {
-	var p *JenkinsPlugin
-
-	if pr, ok := req.check_source_existence(ret); !ok {
+	p, ok := req.check_source_existence(ret)
+	if !ok {
 		return
-	} else {
-		p = pr
 	}
 
-	if !p.load_yaml(ret) {
+	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
+
+	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret) {
+		return
+	}
+	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret) {
 		return
 	}
 
 	// TODO: Use the GithubStruct.UpdateFrom(...)
-	instance := req.Forj.ForjjInstanceName
-	p.yaml.Forjj.InstanceName = instance
-	p.yaml.Forjj.OrganizationName = req.Forj.ForjjOrganization
-	p.yaml.Forjj.InfraUpstream = req.Forj.ForjjInfraUpstream
-
 	var updated bool
 	if p.update_from(req, ret, &updated) != nil {
 		return
@@ -66,10 +73,17 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	if p.update_projects(req, ret, &updated) != nil {
 		return
 	}
-	if p.update_jenkins_sources(req.Forj.ForjjInstanceName, ret, &updated) != nil {
+	if p.update_jenkins_sources(ret, &updated) != nil {
 		return
 	}
-	if p.save_yaml(ret, &updated) != nil {
+
+	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, &updated) != nil {
+		return
+	}
+	if p.saveYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, &updated) != nil {
+		return
+	}
+	if p.saveRunYaml(ret, &updated) != nil {
 		return
 	}
 
@@ -81,7 +95,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	return
 }
 
-// Do maintaining plugin task
+// DoMaintain Do maintaining plugin task
 // req_data contains the request data posted by forjj. Structure generated from 'jenkins.yaml'.
 // ret_data contains the response structure to return back to forjj.
 //

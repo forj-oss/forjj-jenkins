@@ -3,20 +3,21 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/forj-oss/goforjj"
 	"log"
 	"os"
 	"path"
+
+	"github.com/forj-oss/goforjj"
 )
 
 // This file describes how we generate source from templates.
 
 // loop on files to simply copy
-func (p *JenkinsPlugin) copy_source_files(instance_name string, ret *goforjj.PluginData, status *bool) (_ error) {
+func (p *JenkinsPlugin) copy_source_files(ret *goforjj.PluginData, status *bool) (_ error) {
 	for file, desc := range p.sources {
 		source_status := false
 		src := path.Join(p.template_dir, desc.Source)
-		dest := path.Join(p.source_path, desc.Source)
+		dest := path.Join(p.deployPath, desc.Source)
 		parent := path.Dir(dest)
 
 		if parent != "." {
@@ -50,11 +51,11 @@ func (p *JenkinsPlugin) copy_source_files(instance_name string, ret *goforjj.Plu
 
 		if source_status {
 			IsUpdated(status)
-			log.Printf("Copied '%s' to '%s'", src, dest)
-			log.Printf(ret.StatusAdd("%s (%s) copied.", file, desc.Source))
-			ret.AddFile(path.Join(instance_name, desc.Source))
+			log.Printf("Deploy: Copied '%s' to '%s'", src, dest)
+			log.Printf(ret.StatusAdd("Deploy: %s (%s) copied.", file, desc.Source))
+			ret.AddFile(goforjj.FilesDeploy, path.Join(p.InstanceName, desc.Source))
 		} else {
-			log.Printf("'%s' not updated.", dest)
+			log.Printf("Deploy: '%s' not updated.", dest)
 		}
 	}
 	return
@@ -90,17 +91,17 @@ func set_rights(file string, rights os.FileMode) (updated bool, _ error) {
 // The based data used for template is conform to the content of
 // the forjj-jenkins.yaml file
 // See YamlJenkins in jenkins_plugin.go
-func (p *JenkinsPlugin) generate_source_files(instance_name string, ret *goforjj.PluginData, status *bool) (_ error) {
+func (p *JenkinsPlugin) generate_source_files(ret *goforjj.PluginData, status *bool) (_ error) {
 	for file, desc := range p.templates {
-		if s, err := desc.Generate(p.yaml, p.template_dir, p.source_path, desc.Template); err != nil {
+		if s, err := desc.Generate(p.yaml, p.template_dir, p.deployPath, desc.Template); err != nil {
 			log.Printf(ret.Errorf("%s", err))
 			return err
 		} else if s {
-			ret.AddFile(path.Join(instance_name, desc.Template))
-			log.Printf(ret.StatusAdd("%s (%s) generated", file, desc.Template))
+			ret.AddFile(goforjj.FilesDeploy, path.Join(p.InstanceName, desc.Template))
+			log.Printf(ret.StatusAdd("Deploy: %s (%s) generated", file, desc.Template))
 			IsUpdated(status)
 		} else {
-			log.Printf("%s (%s) not updated", file, desc.Template)
+			log.Printf("Deploy: %s (%s) not updated", file, desc.Template)
 		}
 	}
 

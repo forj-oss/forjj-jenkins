@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
+
+	"gopkg.in/yaml.v2"
 )
 
 const template_file = "templates.yaml"
@@ -50,32 +51,41 @@ type TmplSource struct {
 	Template string
 	Source   string
 	If       string `yaml:"if"` // If `If` is empty, the file will be ignored. otherwise the file will copied/generated
-								// as usual.
+	// as usual.
 }
 
 type EnvStruct struct {
 	Value string
-	If string
+	If    string
 }
 
 type RunStruct struct {
-	RunCommand string `yaml:"run"`
-	Env map[string]EnvStruct `yaml:"environment"`
+	RunCommand string               `yaml:"run"`
+	Env        map[string]EnvStruct `yaml:"environment"`
 }
 
-// Model creates the Model data used by gotemplates.
-// The model is not updated until call to CleanModel()
-func (p *JenkinsPlugin) Model() *JenkinsPluginModel {
+// Model creates the Model data used by gotemplates in maintain context.
+func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
 	if JP_Model != nil {
 		return JP_Model
 	}
 	JP_Model = new(JenkinsPluginModel)
-	JP_Model.Source = p.yaml
 	return JP_Model
 }
 
-func (p *JenkinsPlugin) CleanModel() {
-	JP_Model = nil
+// SourceModel creates the Model data used by gotemplates in create/update context.
+// The model is not updated until call to CleanModel()
+func (p *JenkinsPlugin) SourceModel() *JenkinsPluginSourceModel {
+	if JP_Model != nil {
+		return JPS_Model
+	}
+	JPS_Model = new(JenkinsPluginSourceModel)
+	JPS_Model.Source = p.yaml
+	return JPS_Model
+}
+
+func (p *JenkinsPlugin) CleanSourceModel() {
+	JPS_Model = nil
 }
 
 func Evaluate(value string, data interface{}) (string, error) {
@@ -118,7 +128,7 @@ func (p *JenkinsPlugin) DefineSources() error {
 	// load all features
 	p.yaml.Features = make([]string, 0, 5)
 	for _, f := range p.templates_def.Features.Common {
-		if v, err := Evaluate(f, p.Model()); err != nil {
+		if v, err := Evaluate(f, p.SourceModel()); err != nil {
 			return fmt.Errorf("Unable to evaluate '%s'. %s", f, err)
 		} else {
 			if v == "" {
@@ -146,12 +156,12 @@ func (p *JenkinsPlugin) DefineSources() error {
 	p.sources = make(map[string]TmplSource)
 	p.templates = make(map[string]TmplSource)
 
-	choose_file := func (file string, f TmplSource) error {
+	choose_file := func(file string, f TmplSource) error {
 		if file == "" {
 			return nil
 		}
 		if f.If != "" {
-			if v, err := Evaluate(f.If, p.Model()); err != nil {
+			if v, err := Evaluate(f.If, p.SourceModel()); err != nil {
 				return fmt.Errorf("Unable to evaluate the '%s' condition '%s'. %s", file, f.If, err)
 			} else {
 				if v == "" || strings.ToLower(v) == "false" {
@@ -171,20 +181,20 @@ func (p *JenkinsPlugin) DefineSources() error {
 	}
 
 	for file, f := range p.templates_def.Sources.Common {
-		if err := choose_file(file, f) ; err != nil {
+		if err := choose_file(file, f); err != nil {
 			return err
 		}
 	}
 
 	if deploy_sources, ok := p.templates_def.Sources.Deploy[p.yaml.Deploy.Deployment.To]; ok {
 		for file, f := range deploy_sources {
-			if err := choose_file(file, f) ; err != nil {
+			if err := choose_file(file, f); err != nil {
 				return err
 			}
 		}
 	}
 
-	p.CleanModel()
+	p.CleanSourceModel()
 
 	return nil
 }

@@ -68,13 +68,13 @@ run_deploy:
     run: "bin/build.sh && bin/start.sh"
     environment:
       CERTIFICATE_KEY:
-        value: "{{ .Source.Deploy.Ssl.GetKey }}"
-        if: "{{ .Source.Deploy.Ssl.GetKey }}"
+        value: "{{ .Creds.SslPrivateKey }}"
+        if: "{{ .Creds.SslKey }}"
       ADMIN_PWD:
-        value: "{{ .Source.GetAdminPwd }}"
-        if: "{{ .Source.GetAdminPwd }}"
+        value: "{{ .Creds.AdminPwd }}"
+        if: "{{ .Creds.AdminPwd }}"
       GITHUB_USER_PASS:
-        value: "{{ .Source.GithubUser.GetPassword }}"
+        value: "{{ .Creds.GithubUserPassword }}"
   ucp:
     run: "make deploy" # not tested
   mesos:
