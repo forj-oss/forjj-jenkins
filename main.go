@@ -4,8 +4,10 @@
 package main
 
 import (
-	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
+
+	"github.com/forj-oss/forjj/utils"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var cliApp JenkinsApp
@@ -15,6 +17,7 @@ func main() {
 
 	switch kingpin.MustParse(cliApp.App.Parse(os.Args[1:])) {
 	case "service start":
+		*cliApp.params.template_dir, _ = utils.Abs(*cliApp.params.template_dir)
 		cliApp.start_server()
 	default:
 		kingpin.Usage()
