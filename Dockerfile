@@ -23,7 +23,7 @@ RUN echo "devops ALL=(root:root) NOPASSWD:/bin/docker" >> /etc/sudoers.d/docker 
 
 COPY templates/ /templates/
 
-COPY jenkins /bin/
+COPY forjj-jenkins /bin/jenkins
 
 ENTRYPOINT ["/bin/entrypoint.sh"]
 
