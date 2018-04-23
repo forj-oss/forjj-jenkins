@@ -76,7 +76,7 @@ func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
 // SourceModel creates the Model data used by gotemplates in create/update context.
 // The model is not updated until call to CleanModel()
 func (p *JenkinsPlugin) SourceModel() *JenkinsPluginSourceModel {
-	if JP_Model != nil {
+	if JPS_Model != nil {
 		return JPS_Model
 	}
 	JPS_Model = new(JenkinsPluginSourceModel)
