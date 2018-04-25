@@ -25,6 +25,11 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 		return
 	}
 
+	if err := p.defineTemplateDir(); err != nil {
+		ret.Errorf("Unable to define your template source path. %s", err)
+		return
+	}
+
 	if p.create_jenkins_sources(ret) != nil {
 		return
 	}
@@ -50,7 +55,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 // forjj-jenkins.yaml is loaded by default.
 //
 func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) {
-	p, ok := req.check_source_existence(ret)
+	p, ok := req.checkSourceExistence(ret)
 	if !ok {
 		return
 	}

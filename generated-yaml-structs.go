@@ -43,6 +43,7 @@ type AppInstanceStruct struct {
 	AdminPwd string `json:"admin-pwd"` // To replace the default simple security admin password
 	RegistryAuth string `json:"registry-auth"` // List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]
 	SeedJobRepo string `json:"seed-job-repo"` // url to the seed job repository. By default, it uses the <YourInfraRepo>. Jobs are defined under job-dsl.
+	SourceTemplates string `json:"source-templates"` // Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.
 
 	// Groups
 
@@ -98,8 +99,7 @@ type ProjectsInstanceStruct struct {
 // ************************
 
 type ForjCommonStruct struct {
-	ForjjDeploymentEnv  string `json:"deployment-env"`  // Deployment environment name
-	ForjjDeploymentType string `json:"deployment-type"` // Deployment environment type
+	ForjjDeploymentEnv string `json:"deployment-env"` // Deployment environment name
 	Debug string `json:"debug"`
 	ForjjDeployMount string `json:"forjj-deploy-mount"`
 	ForjjInfra string `json:"forjj-infra"`
@@ -261,6 +261,9 @@ const YamlDesc = "---\n" +
    "        help: \"To replace the default simple security admin password\"\n" +
    "        secure: true\n" +
    "        cli-exported-to-actions: [\"maintain\"]\n" +
+   "      source-templates:\n" +
+   "        help: \"Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.\"\n" +
+   "\n" +
    "  features:\n" +
    "    default-actions: [\"add\", \"change\", \"remove\"]\n" +
    "    identified_by_flag: name\n" +

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/forj-oss/forjj/utils"
 	"github.com/forj-oss/goforjj"
 	"gopkg.in/yaml.v2"
 )
@@ -61,8 +62,18 @@ func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 
 	p.source_path = src
 	p.deployPath = deploy
-	p.template_dir = *cliApp.params.template_dir
 	return
+}
+
+func (p *JenkinsPlugin) defineTemplateDir() error {
+	if *cliApp.params.template_dir != "" {
+		p.SetTemplateDir(*cliApp.params.template_dir)
+	} else if p.yamlPlugin.TemplatePath != "" {
+		p.SetTemplateDir(p.yamlPlugin.TemplatePath)
+	} else {
+		p.SetTemplateDir(cliApp.templateDefaultPath)
+	}
+	return nil
 }
 
 // GetMaintainData prepare the Model with maintain data (usually credentials)
@@ -135,9 +146,7 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 	}
 
 	// Initialize Dockerfile data and set default values
-	log.Printf("CreateReq : %#v\n", r)
 	p.yaml.Dockerfile.SetFrom(&jenkins_instance.DockerfileStruct)
-	log.Printf("p.yaml.Dockerfile : %#v\n", p.yaml.Dockerfile)
 
 	// Initialize Jenkins Image data and set default values
 	p.yaml.JenkinsImage.SetFrom(&jenkins_instance.FinalImageStruct)
@@ -149,6 +158,18 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 	if p.yaml.GithubUser.SetFrom(&jenkins_instance.GithubUserStruct) {
 		ret.StatusAdd("github-user defined")
 		log.Printf("github-user defined with '%s'", p.yaml.GithubUser.Name)
+	}
+
+	if jenkins_instance.SourceTemplates != "" {
+		if v, err := utils.Abs(jenkins_instance.SourceTemplates) ; err != nil {
+			return err
+		} else {
+			p.yamlPlugin.TemplatePath = v
+		}
+		if _, err := os.Stat(p.yamlPlugin.TemplatePath); err != nil {
+			ret.Errorf("Unable to update jenkins instances. Template path '%s' is inexistent or innacessible. %s", p.yamlPlugin.TemplatePath, err)
+			return err
+		}
 	}
 
 	return
@@ -288,4 +309,9 @@ func (p *JenkinsPlugin) saveRunYaml(ret *goforjj.PluginData, status *bool) (_ er
 
 func (p *JenkinsPlugin) loadRunYaml(ret *goforjj.PluginData) (_ bool) {
 	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.run, ret)
+}
+
+func (p *JenkinsPlugin) SetTemplateDir(templatePath string) (err error) {
+	p.template_dir, err = utils.Abs(templatePath)
+	return
 }
