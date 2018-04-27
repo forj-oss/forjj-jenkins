@@ -66,7 +66,7 @@ func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 }
 
 func (p *JenkinsPlugin) defineTemplateDir() error {
-	if *cliApp.params.template_dir != "" {
+	if *cliApp.params.template_dir != templateDirDefault {
 		p.SetTemplateDir(*cliApp.params.template_dir)
 	} else if p.yamlPlugin.TemplatePath != "" {
 		p.SetTemplateDir(p.yamlPlugin.TemplatePath)
