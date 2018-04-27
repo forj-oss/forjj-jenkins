@@ -21,11 +21,6 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
 	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
 
-	if err := p.defineTemplateDir(); err != nil {
-		ret.Errorf("Unable to define your template source path. %s", err)
-		return
-	}
-
 	if p.initialize_from(req, ret) != nil {
 		return
 	}
@@ -67,11 +62,6 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 		return
 	}
 	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret) {
-		return
-	}
-
-	if err := p.defineTemplateDir(); err != nil {
-		ret.Errorf("Unable to define your template source path. %s", err)
 		return
 	}
 

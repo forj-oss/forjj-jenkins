@@ -69,7 +69,7 @@ func (p *JenkinsPlugin) defineTemplateDir() error {
 	if *cliApp.params.template_dir != templateDirDefault {
 		p.SetTemplateDir(*cliApp.params.template_dir)
 	} else if p.yamlPlugin.TemplatePath != "" {
-		p.SetTemplateDir(p.yamlPlugin.TemplatePath)
+		p.SetTemplateDir(path.Join(p.source_path, p.yamlPlugin.TemplatePath))
 	} else {
 		p.SetTemplateDir(cliApp.templateDefaultPath)
 	}
@@ -114,6 +114,16 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 		return
 	}
 	jenkins_instance := r.Objects.App[p.InstanceName]
+
+	if v := jenkins_instance.SourceTemplates; v != "" {
+		p.yamlPlugin.TemplatePath = v
+	}
+
+	if err = p.defineTemplateDir(); err != nil {
+		err = fmt.Errorf("Unable to define your template source path. %s", err)
+		ret.Errorf("Unable to define your template source path. %s", err)
+		return
+	}
 
 	p.yaml.Deploy.Deployment.SetFrom(&jenkins_instance.DeployStruct)
 	// Initialize deployment data and set default values
@@ -161,7 +171,7 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 	}
 
 	if jenkins_instance.SourceTemplates != "" {
-		if v, err := utils.Abs(jenkins_instance.SourceTemplates) ; err != nil {
+		if v, err := utils.Abs(jenkins_instance.SourceTemplates); err != nil {
 			return err
 		} else {
 			p.yamlPlugin.TemplatePath = v
@@ -197,6 +207,16 @@ func (p *JenkinsPlugin) DefineDeployCommand() error {
 func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, status *bool) error {
 	instance := r.Forj.ForjjInstanceName
 	instance_data := r.Objects.App[instance]
+
+	if v := instance_data.SourceTemplates; v != "" {
+		p.yamlPlugin.TemplatePath = v
+	}
+
+	if err := p.defineTemplateDir(); err != nil {
+		err = fmt.Errorf("Unable to define your template source path. %s", err)
+		ret.Errorf("Unable to define your template source path. %s", err)
+		return err
+	}
 
 	var deploy DeployStruct = p.yaml.Deploy.Deployment
 	if ok := deploy.UpdateFrom(&instance_data.DeployStruct); ok {
