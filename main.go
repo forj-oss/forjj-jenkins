@@ -17,7 +17,9 @@ func main() {
 
 	switch kingpin.MustParse(cliApp.App.Parse(os.Args[1:])) {
 	case "service start":
-		*cliApp.params.template_dir, _ = utils.Abs(*cliApp.params.template_dir)
+		if v := *cliApp.params.template_dir ; v != templateDirDefault {
+			*cliApp.params.template_dir, _ = utils.Abs(v)
+		}
 		cliApp.start_server()
 	default:
 		kingpin.Usage()

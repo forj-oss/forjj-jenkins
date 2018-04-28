@@ -8,14 +8,18 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
 	"log"
+	"github.com/forj-oss/forjj/utils"
 )
 
 type JenkinsApp struct {
 	App    *kingpin.Application
 	params Params
 	socket string
+	templateDefaultPath string // Combined with templateDirDefault constant, set the absolute path at plugin startup.
 	Yaml   goforjj.YamlPlugin
 }
+
+const templateDirDefault="templates"
 
 type Params struct {
 	socket_file  *string
@@ -25,7 +29,7 @@ type Params struct {
 }
 
 func (a *JenkinsApp) init() {
-	a.load_plugin_def()
+	a.loadPluginDef()
 
 	a.App = kingpin.New("jenkins", "CI jenkins plugin for FORJJ.")
 	version := "0.1"
@@ -39,14 +43,17 @@ func (a *JenkinsApp) init() {
 	a.params.socket_file = daemon.Flag("socket-file", "Socket file to use").Default(a.Yaml.Runtime.Service.Socket).String()
 	a.params.socket_path = daemon.Flag("socket-path", "Socket file path to use").Default("/tmp/forjj-socks").String()
 	a.params.daemon = daemon.Flag("daemon", "Start process in background like a daemon").Short('d').Bool()
-	a.params.template_dir = daemon.Flag("templates", "Path to templates files.").Default("templates").String()
+	a.params.template_dir = daemon.Flag("templates", "Path to templates files.").Default(templateDirDefault).String()
 
 }
 
-func (a *JenkinsApp) load_plugin_def() {
+// loadPluginDef Load application defaults
+func (a *JenkinsApp) loadPluginDef() {
 	yaml.Unmarshal([]byte(YamlDesc), &a.Yaml)
 	if a.Yaml.Runtime.Service.Socket == "" {
 		a.Yaml.Runtime.Service.Socket = "jenkins.sock"
 		log.Printf("Set default socket file: %s", a.Yaml.Runtime.Service.Socket)
 	}
+
+	a.templateDefaultPath, _ = utils.Abs(templateDirDefault)
 }

@@ -95,6 +95,9 @@ objects:
         help: "To replace the default simple security admin password"
         secure: true
         cli-exported-to-actions: ["maintain"]
+      source-templates:
+        help: "Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template."
+
   features:
     default-actions: ["add", "change", "remove"]
     identified_by_flag: name
