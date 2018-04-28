@@ -61,7 +61,8 @@ objects:
             help: "Deployment name used to deploy jenkins."
             default: "docker"
           service-addr:
-            help: "Exposed service CNAME or IP address of the expected jenkins instance"
+            help: "Exposed service CNAME or IP address of the expected jenkins instance. By default, it uses localhost."
+            default: localhost
           service-port:
             default: 8080
             help: "Expected jenkins instance port number."
