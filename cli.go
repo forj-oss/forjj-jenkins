@@ -4,22 +4,23 @@
 package main
 
 import (
+	"log"
+
+	"github.com/forj-oss/forjj/utils"
 	"github.com/forj-oss/goforjj"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
-	"log"
-	"github.com/forj-oss/forjj/utils"
 )
 
 type JenkinsApp struct {
-	App    *kingpin.Application
-	params Params
-	socket string
+	App                 *kingpin.Application
+	params              Params
+	socket              string
 	templateDefaultPath string // Combined with templateDirDefault constant, set the absolute path at plugin startup.
-	Yaml   goforjj.YamlPlugin
+	Yaml                goforjj.YamlPlugin
 }
 
-const templateDirDefault="templates"
+const templateDirDefault = "templates"
 
 type Params struct {
 	socket_file  *string
@@ -32,7 +33,7 @@ func (a *JenkinsApp) init() {
 	a.loadPluginDef()
 
 	a.App = kingpin.New("jenkins", "CI jenkins plugin for FORJJ.")
-	version := "0.1"
+	version := "0.2"
 	if version != "" {
 		a.App.Version(version)
 	}

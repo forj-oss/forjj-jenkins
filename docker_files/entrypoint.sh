@@ -7,4 +7,5 @@ then
 fi
 
 /bin/update_user.sh $UID $GID
+/bin/jenkins --version
 exec /bin/su devops -c "/bin/jenkins $*"
