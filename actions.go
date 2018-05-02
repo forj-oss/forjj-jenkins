@@ -58,10 +58,10 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
 	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
 
-	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret) {
+	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, false) {
 		return
 	}
-	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret) {
+	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, true) {
 		return
 	}
 
