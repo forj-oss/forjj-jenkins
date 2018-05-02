@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/forj-oss/forjj/utils"
 	"github.com/forj-oss/goforjj"
 )
 
@@ -30,20 +29,6 @@ func (r *UpdateReq) checkSourceExistence(ret *goforjj.PluginData) (p *JenkinsPlu
 	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
 	p = newPlugin(srcPath, deployPath)
-
-	jenkins_instance := r.Objects.App[r.Forj.ForjjInstanceName]
-	if jenkins_instance.SourceTemplates != "" {
-		if v, err := utils.Abs(jenkins_instance.SourceTemplates); err != nil {
-			ret.Errorf("Unable to update jenkins instances. %s", err)
-			return nil, false
-		} else {
-			p.yamlPlugin.TemplatePath = v
-		}
-		if _, err := os.Stat(p.yamlPlugin.TemplatePath); err != nil {
-			ret.Errorf("Unable to update jenkins instances. Template path '%s' is inexistent or innacessible. %s", p.yamlPlugin.TemplatePath, err)
-			return
-		}
-	}
 
 	ret.StatusAdd("environment checked.")
 	return p, true
