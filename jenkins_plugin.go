@@ -296,7 +296,7 @@ func (p *JenkinsPlugin) saveYaml(where, fileName string, data interface{}, ret *
 	return
 }
 
-func (p *JenkinsPlugin) loadYaml(where, fileName string, data interface{}, ret *goforjj.PluginData) (status bool) {
+func (p *JenkinsPlugin) loadYaml(where, fileName string, data interface{}, ret *goforjj.PluginData, ignored bool) (status bool) {
 	destPath := p.source_path
 	if where == goforjj.FilesDeploy {
 		destPath = p.deployPath
@@ -305,6 +305,10 @@ func (p *JenkinsPlugin) loadYaml(where, fileName string, data interface{}, ret *
 
 	log.Printf("Loading '%s'...", file)
 	if d, err := ioutil.ReadFile(file); err != nil {
+		if ignored {
+			log.Printf("Unable to read '%s'. %s", file, err)
+			return true
+		}
 		ret.Errorf("Unable to read '%s'. %s", file, err)
 		return
 	} else {
@@ -328,7 +332,7 @@ func (p *JenkinsPlugin) saveRunYaml(ret *goforjj.PluginData, status *bool) (_ er
 }
 
 func (p *JenkinsPlugin) loadRunYaml(ret *goforjj.PluginData) (_ bool) {
-	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.run, ret)
+	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.run, ret, false)
 }
 
 func (p *JenkinsPlugin) SetTemplateDir(templatePath string) (err error) {
