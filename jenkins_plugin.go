@@ -65,11 +65,25 @@ func newPlugin(src, deploy string) (p *JenkinsPlugin) {
 	return
 }
 
-func (p *JenkinsPlugin) defineTemplateDir() error {
+func (p *JenkinsPlugin) defineTemplateDir(jenkins_instance AppInstanceStruct) error {
+	// Analyze Forjfile input.
+	if jenkins_instance.SourceTemplates != "" {
+		if v, err := utils.Abs(path.Join(p.source_path, "templates", jenkins_instance.SourceTemplates)); err != nil {
+			return fmt.Errorf("Unable to define template directory. %s", err)
+		} else {
+			p.yamlPlugin.TemplatePath = v
+		}
+		if _, err := os.Stat(p.yamlPlugin.TemplatePath); err != nil {
+			return fmt.Errorf("Unable to define template directory. Template path '%s' is inexistent or inaccessible. %s", p.yamlPlugin.TemplatePath, err)
+		}
+	}
+
+	// Set template_dir
+
 	if *cliApp.params.template_dir != templateDirDefault {
 		p.SetTemplateDir(*cliApp.params.template_dir)
 	} else if p.yamlPlugin.TemplatePath != "" {
-		p.SetTemplateDir(path.Join(p.source_path, p.yamlPlugin.TemplatePath))
+		p.SetTemplateDir(p.yamlPlugin.TemplatePath)
 	} else {
 		p.SetTemplateDir(cliApp.templateDefaultPath)
 	}
@@ -119,7 +133,7 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 		p.yamlPlugin.TemplatePath = v
 	}
 
-	if err = p.defineTemplateDir(); err != nil {
+	if err = p.defineTemplateDir(jenkins_instance); err != nil {
 		err = fmt.Errorf("Unable to define your template source path. %s", err)
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return
@@ -170,18 +184,6 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 		log.Printf("github-user defined with '%s'", p.yaml.GithubUser.Name)
 	}
 
-	if jenkins_instance.SourceTemplates != "" {
-		if v, err := utils.Abs(jenkins_instance.SourceTemplates); err != nil {
-			return err
-		} else {
-			p.yamlPlugin.TemplatePath = v
-		}
-		if _, err := os.Stat(p.yamlPlugin.TemplatePath); err != nil {
-			ret.Errorf("Unable to update jenkins instances. Template path '%s' is inexistent or innacessible. %s", p.yamlPlugin.TemplatePath, err)
-			return err
-		}
-	}
-
 	return
 }
 
@@ -212,7 +214,9 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 		p.yamlPlugin.TemplatePath = v
 	}
 
-	if err := p.defineTemplateDir(); err != nil {
+	jenkins_instance := r.Objects.App[r.Forj.ForjjInstanceName]
+
+	if err := p.defineTemplateDir(jenkins_instance); err != nil {
 		err = fmt.Errorf("Unable to define your template source path. %s", err)
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return err
