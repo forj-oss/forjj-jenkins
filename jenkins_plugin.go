@@ -84,6 +84,7 @@ func (p *JenkinsPlugin) defineTemplateDir(jenkins_instance AppInstanceStruct) er
 		p.SetTemplateDir(*cliApp.params.template_dir)
 	} else if p.yamlPlugin.TemplatePath != "" {
 		p.SetTemplateDir(p.yamlPlugin.TemplatePath)
+		log.Printf("Using custom templates: %s", p.yamlPlugin.TemplatePath)
 	} else {
 		p.SetTemplateDir(cliApp.templateDefaultPath)
 	}
