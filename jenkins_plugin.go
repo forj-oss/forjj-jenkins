@@ -42,6 +42,7 @@ type JenkinsPlugin struct {
 
 type DeployApp struct {
 	Deployment DeployStruct
+	Name       string
 	// Those 2 different parameters are defined at create time and can be updated with change.
 	// There are default deployment task and name. This can be changed at maintain time
 	// to reflect the maintain deployment task to execute.
@@ -142,6 +143,8 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 		return
 	}
 
+	p.yaml.Deploy.Name = r.Forj.ForjjDeploymentEnv
+
 	p.yaml.Deploy.Deployment.SetFrom(&jenkins_instance.DeployStruct)
 	// Initialize deployment data and set default values
 	if p.yaml.Deploy.Deployment.To == "" {
@@ -224,6 +227,8 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return err
 	}
+
+	p.yaml.Deploy.Name = r.Forj.ForjjDeploymentEnv
 
 	var deploy DeployStruct = p.yaml.Deploy.Deployment
 	if ok := deploy.UpdateFrom(&instance_data.DeployStruct); ok {
