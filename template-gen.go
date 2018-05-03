@@ -11,7 +11,7 @@ func (t *DeployStruct) SetFrom(d *DeployStruct) (status bool) {
 
 func (t *DeployStruct) UpdateFrom(d *DeployStruct) (status bool) {
 	status = SetOrClean(&t.ServiceAddr, d.ServiceAddr)
-	status = SetOnceIfSet(&t.To, d.To) || status
+	status = SetIfSet(&t.To, d.To) || status
 	return SetOrClean(&t.ServicePort, d.ServicePort) || status
 }
 
