@@ -218,7 +218,15 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 		data = strings.Replace(string(b), "}}\\\n", "}}", -1)
 	}
 
-	t, err := template.New(src).Funcs(template.FuncMap{}).Parse(data)
+	t, err := template.New(src).Funcs(template.FuncMap{
+		"AsTemplate": func(pars ...string) string {
+			ret := make([]string, 0, len(pars)+2)
+			ret = append(ret, "{{")
+			ret = append(ret, pars...)
+			ret = append(ret, "}}")
+			return strings.Join(ret, " ")
+		},
+	}).Parse(data)
 	if err != nil {
 		return false, fmt.Errorf("Template issue. %s", err)
 	}
