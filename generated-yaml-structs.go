@@ -8,7 +8,7 @@ package main
 // Groups structure
 
 type DeployStruct struct {
-	ServiceAddr string `json:"deploy-service-addr"` // Exposed service CNAME or IP address of the expected jenkins instance
+	ServiceAddr string `json:"deploy-service-addr"` // Exposed service CNAME or IP address of the expected jenkins instance. By default, it uses localhost.
 	ServicePort string `json:"deploy-service-port"` // Expected jenkins instance port number.
 	To string `json:"deploy-to"` // Deployment name used to deploy jenkins.
 }
@@ -99,7 +99,8 @@ type ProjectsInstanceStruct struct {
 // ************************
 
 type ForjCommonStruct struct {
-	ForjjDeploymentEnv string `json:"deployment-env"` // Deployment environment name
+	ForjjDeploymentEnv  string `json:"deployment-env"`  // Deployment environment name
+	ForjjDeploymentType string `json:"deployment-type"` // Deployment environment type
 	Debug string `json:"debug"`
 	ForjjDeployMount string `json:"forjj-deploy-mount"`
 	ForjjInfra string `json:"forjj-infra"`
@@ -227,7 +228,8 @@ const YamlDesc = "---\n" +
    "            help: \"Deployment name used to deploy jenkins.\"\n" +
    "            default: \"docker\"\n" +
    "          service-addr:\n" +
-   "            help: \"Exposed service CNAME or IP address of the expected jenkins instance\"\n" +
+   "            help: \"Exposed service CNAME or IP address of the expected jenkins instance. By default, it uses localhost.\"\n" +
+   "            default: localhost\n" +
    "          service-port:\n" +
    "            default: 8080\n" +
    "            help: \"Expected jenkins instance port number.\"\n" +

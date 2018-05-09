@@ -1,5 +1,5 @@
 hash: 0be183254e3043dea356cd1552e6cd0033116606c56e25dc86e0db5a591f0736
-updated: 2018-04-17T20:47:41.360992463Z
+updated: 2018-05-09T15:28:55.2975732Z
 imports:
 - name: github.com/alecthomas/kingpin
   version: a328427ab7d619fe3c8d16a0da66899d03d5afae
@@ -13,7 +13,7 @@ imports:
 - name: github.com/fatih/color
   version: 507f6050b8568533fb3f5504de8e5205fa62a114
 - name: github.com/forj-oss/forjj
-  version: 5bdab50c71256546a79f429223144a037e1fa3c0
+  version: bd725a2a9c0463dd9fb49f9d31684be222bd7ff4
   subpackages:
   - utils
 - name: github.com/forj-oss/forjj-modules
@@ -21,13 +21,13 @@ imports:
   subpackages:
   - trace
 - name: github.com/forj-oss/goforjj
-  version: afb76b4fea15c7e5340700a1bba629f0a72f6ff9
+  version: 1055de82243410baee0a722241c3ee59dfe880dc
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 53c1911da2b537f792e7cafcb446b05ffe33b996
 - name: github.com/kr/text
-  version: 7cafcd837844e784b526369c9bce262804aebc60
+  version: e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f
 - name: github.com/kvz/logstreamer
   version: a635b98146f0f465f3413a0b8ec481f3698d3fc2
 - name: github.com/mattn/go-colorable
@@ -41,11 +41,11 @@ imports:
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
 - name: golang.org/x/net
-  version: 61147c48b25b599e5b561d2e9c4f3e1ef489ca41
+  version: f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd
   subpackages:
   - publicsuffix
 - name: golang.org/x/sys
-  version: 3b87a42e500a6dc65dae1a55d0b641295971163e
+  version: 7db1c3b1a98089d0071c84f646ff5c96aad43682
   subpackages:
   - unix
 - name: gopkg.in/alecthomas/kingpin.v2
