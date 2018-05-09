@@ -148,6 +148,7 @@ type MaintainReq struct {
 	Forj struct {
 		ForjCommonStruct
 		DeployTo string `json:"deploy-to"`
+		ForjjUsername string `json:"forjj-username"`
 	}
 	Objects MaintainArgReq
 }
@@ -195,6 +196,8 @@ const YamlDesc = "---\n" +
    "    deploy-to:\n" +
    "      default: docker\n" +
    "      help: \"Where jenkins will be published.\"\n" +
+   "    forjj-username:\n" +
+   "      help: \"User name running forjj\"\n" +
    "objects:\n" +
    "  app:\n" +
    "    default-actions: [\"add\", \"change\"]\n" +

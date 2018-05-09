@@ -28,6 +28,8 @@ task_flags:
     deploy-to:
       default: docker
       help: "Where jenkins will be published."
+    forjj-username:
+      help: "User name running forjj"
 objects:
   app:
     default-actions: ["add", "change"]

@@ -19,6 +19,7 @@ type JenkinsPluginSourceModel struct {
 }
 
 type JenkinsPluginModel struct {
+	Env map[string]string
 	Creds map[string]string
 }
 
@@ -113,6 +114,9 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 		if model.Creds == nil {
 			model.Creds = make(map[string]string)
 		}
+		if model.Env == nil {
+			model.Env = make(map[string]string)
+		}
 
 		model.Creds["SslPrivateKey"] = v.SslPrivateKey
 
@@ -121,6 +125,8 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 		}
 
 		model.Creds["GithubUserPassword"] = v.GithubUserPassword
+
+		model.Env["Username"] = req.Forj.ForjjUsername
 	}
 	return true
 }

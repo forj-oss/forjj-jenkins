@@ -70,6 +70,8 @@ func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
 		return JP_Model
 	}
 	JP_Model = new(JenkinsPluginModel)
+	JP_Model.Creds = make(map[string]string)
+	JP_Model.Env = make(map[string]string)
 	return JP_Model
 }
 
