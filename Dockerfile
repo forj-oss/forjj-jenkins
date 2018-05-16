@@ -10,7 +10,7 @@ COPY ca_certificates/* /usr/local/share/ca-certificates/
 COPY docker_files/*.sh /bin/
 
 RUN apk update && \
-    apk add --no-cache ca-certificates sudo && \
+    apk add --no-cache ca-certificates sudo bash && \
     update-ca-certificates --fresh && \
     rm -f /var/cache/apk/*tar.gz && \
     adduser devops devops -D && \
