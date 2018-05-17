@@ -12,8 +12,8 @@ import (
 	"strings"
 	"text/template"
 
-	"gopkg.in/yaml.v2"
 	"github.com/forj-oss/forjj-modules/trace"
+	"gopkg.in/yaml.v2"
 )
 
 const template_file = "templates.yaml"
@@ -232,8 +232,11 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 	}
 
 	if ts.Tag != "" {
+		if v := len(ts.Tag); v < 4 {
+			return false, fmt.Errorf("%s: tag template string must have at least 2 cars for 'begin' and 'end' tag. '%s' is too small", ts.Template, ts.Tag)
+		}
 		if v := len(ts.Tag); v%2 != 0 {
-			return false, fmt.Errorf("%s: tag template string must define begin and end differnt tag, each of same size. Got %d", ts.Template, v)
+			return false, fmt.Errorf("%s: tag template string must define begin and end different tag, each of same size. Got %d", ts.Template, v)
 		}
 		tagSize := len(ts.Tag) / 2
 		tag1 := ts.Tag[0:tagSize]
@@ -244,15 +247,22 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 				ts.Template, ts.Tag, tag1, tag2)
 		}
 
+		if tag1 == "{{" || tag1 == "}}" {
+			return false, fmt.Errorf("%s: begin tag '%s' cannot be '{{' or '}}'", ts.Template, tag1)
+		}
+		if tag2 == "{{" || tag2 == "}}" {
+			return false, fmt.Errorf("%s: end tag '%s' cannot be '{{' or '}}'", ts.Template, tag2)
+		}
+
 		gotrace.Trace("Tag: begin='%s', end='%s'", tag1, tag2)
 
 		replacer := map[string]string{
-			"}}": "{{`}}`}}",
-			"{{": "{{`{{`}}",
+			"}}": tag1 + "`}}`" + tag2,
+			"{{": tag1 + "`{{`" + tag2,
 			tag1: "{{",
 			tag2: "}}",
 		}
-		for _, tagSel := range []string{"}}", "{{", tag1, tag2} {
+		for _, tagSel := range []string{"{{", "}}", tag1, tag2} {
 			data = strings.Replace(data, tagSel, replacer[tagSel], -1)
 		}
 	}
