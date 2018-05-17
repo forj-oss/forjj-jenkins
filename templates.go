@@ -49,6 +49,7 @@ type TmplSourcesStruct map[string]TmplSource
 type TmplSource struct {
 	Chmod    os.FileMode
 	Template string
+	Tag      string // template string to use.
 	Source   string
 	If       string `yaml:"if"` // If `If` is empty, the file will be ignored. otherwise the file will copied/generated
 	// as usual.
@@ -201,6 +202,15 @@ func (p *JenkinsPlugin) DefineSources() error {
 	return nil
 }
 
+// Generate read a source file and interpret it with text/template.
+// It reads the source file, generate the final file and state if file generated has been updated or not.
+//
+// It permits to use another template tag to avoid conflict with the code to generate.
+// This Tag have to define a pair string. Ex: "(())" the string is split in 2, to define the begin and end tag. ie begin="((", end="))"
+// "((" is invalid because begin == end == "("
+// "[[]" is also invalid, because the tag size is not divided per 2 (size is 3)
+//
+// When a different tag is used, any existing {{}} in source file will be kept after the template generation.
 func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, dest_name string) (updated bool, _ error) {
 	src := path.Join(template_dir, ts.Template)
 	dest := path.Join(dest_path, dest_name)
@@ -220,15 +230,30 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 		data = strings.Replace(string(b), "}}\\\n", "}}", -1)
 	}
 
-	t, err := template.New(src).Funcs(template.FuncMap{
-		"AsTemplate": func(pars ...string) string {
-			ret := make([]string, 0, len(pars)+2)
-			ret = append(ret, "{{")
-			ret = append(ret, pars...)
-			ret = append(ret, "}}")
-			return strings.Join(ret, " ")
-		},
-	}).Parse(data)
+	if ts.Tag != "" {
+		if len(ts.Tag)%2 == 0 {
+			return false, fmt.Errorf("tag template string must define begin and end differnt tag, each of same size")
+		}
+		tagSize := len(ts.Tag) / 2
+		tag1 := ts.Tag[0 : tagSize-1]
+		tag2 := ts.Tag[tagSize:]
+
+		if tag1 == tag2 {
+			return false, fmt.Errorf("tag template string must define different string for begin/end tag")
+		}
+
+		replacer := map[string]string{
+			"}}": "{{`}}`}}",
+			"{{": "{{`{{`}}",
+			tag1: "{{",
+			tag2: "}}",
+		}
+		for _, tagSel := range []string{"}}", "{{", tag1, tag2} {
+			data = strings.Replace(data, tagSel, replacer[tagSel], -1)
+		}
+	}
+
+	t, err := template.New(src).Funcs(template.FuncMap{}).Parse(data)
 	if err != nil {
 		return false, fmt.Errorf("Template issue. %s", err)
 	}
