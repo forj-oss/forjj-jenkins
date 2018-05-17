@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"gopkg.in/yaml.v2"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 const template_file = "templates.yaml"
@@ -235,13 +236,15 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 			return false, fmt.Errorf("%s: tag template string must define begin and end differnt tag, each of same size. Got %d", ts.Template, v)
 		}
 		tagSize := len(ts.Tag) / 2
-		tag1 := ts.Tag[0 : tagSize-1]
+		tag1 := ts.Tag[0:tagSize]
 		tag2 := ts.Tag[tagSize:]
 
 		if tag1 == tag2 {
 			return false, fmt.Errorf("%s: tag template string (%s) must define different string for begin/end tag. Got begin='%s' vs end='%s'",
 				ts.Template, ts.Tag, tag1, tag2)
 		}
+
+		gotrace.Trace("Tag: begin='%s', end='%s'", tag1, tag2)
 
 		replacer := map[string]string{
 			"}}": "{{`}}`}}",
