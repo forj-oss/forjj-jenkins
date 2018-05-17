@@ -228,7 +228,7 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 	if b, err := ioutil.ReadFile(src); err != nil {
 		return false, fmt.Errorf("Load issue. %s", err)
 	} else {
-		data = strings.Replace(string(b), "}}\\\n", "}}", -1)
+		data = string(b)
 	}
 
 	if ts.Tag != "" {
@@ -266,6 +266,8 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 			data = strings.Replace(data, tagSel, replacer[tagSel], -1)
 		}
 	}
+
+	data = strings.Replace(data, "}}\\\n", "}}", -1)
 
 	t, err := template.New(src).Funcs(template.FuncMap{}).Parse(data)
 	if err != nil {
