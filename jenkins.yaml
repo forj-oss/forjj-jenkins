@@ -11,6 +11,7 @@ runtime:
     #socket: "jenkins.sock"
     parameters: [ "service", "start", "--templates", "/templates"]
 created_flag_file: "{{ .InstanceName }}/forjj-{{ .Name }}.yaml"
+extend_relative_path: "{{ if .Application.Get \"source-templates\" }}templates/{{ .Application.Get \"source-templates\" }}{{ end }}"
 task_flags:
   common:
     forjj-infra-upstream:
