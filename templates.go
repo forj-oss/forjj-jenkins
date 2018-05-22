@@ -278,11 +278,11 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 	final_md5_file := md5.New()
 
 	if out, err := os.Create(dest); err != nil {
-		return false, fmt.Errorf("Unable to create %s. %s.", dest, err)
+		return false, fmt.Errorf("Unable to create %s. %s", dest, err)
 	} else {
 		multi_write_file := io.MultiWriter(out, final_md5_file)
 		if err := t.Execute(multi_write_file, tmpl_data); err != nil {
-			return false, fmt.Errorf("Unable to interpret %s. %s.", dest, err)
+			return false, fmt.Errorf("Unable to interpret %s. %s", dest, err)
 		}
 		out.Close()
 	}

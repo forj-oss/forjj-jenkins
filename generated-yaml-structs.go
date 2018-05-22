@@ -52,6 +52,8 @@ type AppInstanceStruct struct {
 	FinalImageStruct
 	GithubUserStruct
 	SslStruct
+
+	Extent map[string]string `json:",omitempty"`
 }
 
 // Object features groups structure
@@ -64,6 +66,8 @@ type AppInstanceStruct struct {
 type FeaturesInstanceStruct struct {
 	Name string `json:"name"` // name of the jenkins feature
 	Options string `json:"options"` // List of feature option to use
+
+	Extent map[string]string `json:",omitempty"`
 }
 
 // Object projects groups structure
@@ -91,6 +95,8 @@ type ProjectsInstanceStruct struct {
 
 	GitStruct
 	GithubStruct
+
+	Extent map[string]string `json:",omitempty"`
 }
 
 
@@ -114,7 +120,11 @@ type CreateReq struct {
 	Forj struct {
 		ForjCommonStruct
 	}
+	ForjExtent map[string]string `json:",omitempty"`
+
 	Objects CreateArgReq
+
+	Creds map[string]string
 }
 
 type CreateArgReq struct {
@@ -131,7 +141,11 @@ type UpdateReq struct {
 	Forj struct {
 		ForjCommonStruct
 	}
+	ForjExtent map[string]string `json:",omitempty"`
+
 	Objects UpdateArgReq
+
+	Creds map[string]string
 }
 
 type UpdateArgReq struct {
@@ -150,7 +164,11 @@ type MaintainReq struct {
 		DeployTo string `json:"deploy-to"`
 		ForjjUsername string `json:"forjj-username"`
 	}
+	ForjExtent map[string]string `json:",omitempty"`
+
 	Objects MaintainArgReq
+
+	Creds map[string]string
 }
 
 type MaintainArgReq struct {
@@ -179,6 +197,7 @@ const YamlDesc = "---\n" +
    "    #socket: \"jenkins.sock\"\n" +
    "    parameters: [ \"service\", \"start\", \"--templates\", \"/templates\"]\n" +
    "created_flag_file: \"{{ .InstanceName }}/forjj-{{ .Name }}.yaml\"\n" +
+   "extend_relative_path: \"{{ if .Application.Get \\\"source-templates\\\" }}templates/{{ .Application.Get \\\"source-templates\\\" }}{{ end }}\"\n" +
    "task_flags:\n" +
    "  common:\n" +
    "    forjj-infra-upstream:\n" +
