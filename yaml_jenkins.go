@@ -10,6 +10,7 @@ type YamlJenkins struct {
 	Projects     *Projects
 	admin_pwd    string
 	GithubUser   UserPasswordCreds `yaml:"github-user,omitempty"`
+	AppExtent    map[string]string
 }
 
 func (y *YamlJenkins) ProjectsHasSource(name string) (_ bool) {

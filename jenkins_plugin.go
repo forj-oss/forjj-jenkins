@@ -18,8 +18,9 @@ type JenkinsPluginSourceModel struct {
 	Source YamlJenkins
 }
 
+// JenkinsPluginModel provides the structure to evaluate with template before running commands.
 type JenkinsPluginModel struct {
-	Env map[string]string
+	Env   map[string]string
 	Creds map[string]string
 }
 
@@ -118,13 +119,24 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 			model.Env = make(map[string]string)
 		}
 
-		model.Creds["SslPrivateKey"] = v.SslPrivateKey
-
-		if v.AdminPwd != "" {
-			model.Creds["AdminPwd"] = v.AdminPwd
+		// Predefine credentials from jenkins.yaml
+		appPrefix := "app-" + p.InstanceName + "-"
+		credList := map[string]string{
+			"SslPrivateKey":      appPrefix + "ssl-private-key",
+			"AdminPwd":           appPrefix + "admin-pwd",
+			"GithubUserPassword": appPrefix + "github-user-password",
 		}
 
-		model.Creds["GithubUserPassword"] = v.GithubUserPassword
+		for credName, credValue := range credList {
+			if v, found := req.Creds[credName]; found && v != "" {
+				model.Creds[credValue] = req.Creds[credName]
+			}
+		}
+
+		// Extended Credentials
+		for credName, credValue := range req.Creds {
+			model.Creds[credName] = credValue
+		}
 
 		model.Env["Username"] = req.Forj.ForjjUsername
 	}
@@ -149,6 +161,8 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return
 	}
+
+	p.yaml.AppExtent = jenkins_instance.Extent
 
 	p.yaml.Deploy.Name = r.Forj.ForjjDeploymentEnv
 	p.yaml.Deploy.Type = r.Forj.ForjjDeploymentType
@@ -235,6 +249,8 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return err
 	}
+
+	p.yaml.AppExtent = jenkins_instance.Extent
 
 	p.yaml.Deploy.Name = r.Forj.ForjjDeploymentEnv
 	p.yaml.Deploy.Type = r.Forj.ForjjDeploymentType
