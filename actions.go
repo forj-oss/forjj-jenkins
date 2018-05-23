@@ -19,7 +19,6 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 	}
 
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
-	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
 
 	if p.initialize_from(req, ret) != nil {
 		return
@@ -33,7 +32,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 		return
 	}
 
-	if p.saveYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, nil) != nil {
+	if p.saveYaml(goforjj.FilesDeploy, jenkinsDeployFile, &p.yaml, ret, nil) != nil {
 		return
 	}
 
@@ -56,12 +55,11 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	}
 
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
-	confEnvFile := "jenkins-" + p.deployEnv + ".yaml"
 
 	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, false) {
 		return
 	}
-	if !p.loadYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, true) {
+	if !p.loadYaml(goforjj.FilesDeploy, jenkinsDeployFile, &p.yaml, ret, true) {
 		return
 	}
 
@@ -80,7 +78,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, &updated) != nil {
 		return
 	}
-	if p.saveYaml(goforjj.FilesSource, confEnvFile, &p.yaml, ret, &updated) != nil {
+	if p.saveYaml(goforjj.FilesDeploy, jenkinsDeployFile, &p.yaml, ret, &updated) != nil {
 		return
 	}
 	if p.saveRunYaml(ret, &updated) != nil {
@@ -100,7 +98,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 // ret_data contains the response structure to return back to forjj.
 //
 func DoMaintain(w http.ResponseWriter, r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
-	if !req.check_source_existence(ret) {
+	if !req.checkSourceExistence(ret) {
 		return
 	}
 

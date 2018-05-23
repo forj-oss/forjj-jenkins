@@ -32,8 +32,9 @@ type GithubUserStruct struct {
 }
 
 type SslStruct struct {
-	Certificate string `json:"ssl-certificate"` // SSL Certificate file to certify your jenkins instance.
-	PrivateKey string `json:"ssl-private-key"` // SSL private key to use to use the ssh certificate in jenkins.
+	Certificate string `json:"ssl-certificate"` // SSL Certificate file to certify your jenkins instance. To use this, set ssl-method to 'manual'.
+	Method string `json:"ssl-method"` // How SSL is managed for this Jenkins service. By default, SSL is disabled (none)
+	PrivateKey string `json:"ssl-private-key"` // SSL private key to use to use the ssh certificate in jenkins. To use this, set ssl-method to 'manual'.
 }
 
 
@@ -179,7 +180,7 @@ type AppMaintainStruct struct {
 	AdminPwd string `json:"admin-pwd"` // To replace the default simple security admin password
 	RegistryAuth string `json:"registry-auth"` // List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]
 	GithubUserPassword string `json:"github-user-password"` // github user password. Recommended. Stored as github-user credential in jenkins.
-	SslPrivateKey string `json:"ssl-private-key"` // SSL private key to use to use the ssh certificate in jenkins.
+	SslPrivateKey string `json:"ssl-private-key"` // SSL private key to use to use the ssh certificate in jenkins. To use this, set ssl-method to 'manual'.
 }
 
 
@@ -257,12 +258,15 @@ const YamlDesc = "---\n" +
    "            help: \"Expected jenkins instance port number.\"\n" +
    "      ssl:\n" +
    "        flags:\n" +
+   "          method:\n" +
+   "            help: \"How SSL is managed for this Jenkins service. By default, SSL is disabled (none)\"\n" +
+   "            default: none\n" +
    "          private-key:\n" +
-   "            help: SSL private key to use to use the ssh certificate in jenkins.\n" +
+   "            help: SSL private key to use to use the ssh certificate in jenkins. To use this, set ssl-method to 'manual'.\n" +
    "            secure: true\n" +
    "            cli-exported-to-actions: [\"maintain\"]\n" +
    "          certificate:\n" +
-   "            help: SSL Certificate file to certify your jenkins instance.\n" +
+   "            help: SSL Certificate file to certify your jenkins instance. To use this, set ssl-method to 'manual'.\n" +
    "      github-user:\n" +
    "        flags:\n" +
    "          username:\n" +

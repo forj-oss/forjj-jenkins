@@ -43,7 +43,7 @@ sources:
       source  : "jenkins_credentials.sh.sample"
     ssl certificate:
       template: "certificate.crt"
-      if: "{{ .Source.Deploy.Ssl.Certificate }}"
+      if: "{{ if (and .Source.Deploy.Ssl.Certificate (eq .Source.Deploy.Ssl.Method \"manual\")) }}true{{ end }}"
   deploy:
     docker:
       start up script:
@@ -69,7 +69,7 @@ run_deploy:
     environment:
       CERTIFICATE_KEY:
         value: "{{ .Creds.SslPrivateKey }}"
-        if: "{{ .Creds.SslKey }}"
+        if: "{{ if (and .Creds.SslKey (eq .Config.deploy.ssl.method \"manual\") ) }}"
       ADMIN_PWD:
         value: "{{ .Creds.AdminPwd }}"
         if: "{{ .Creds.AdminPwd }}"
