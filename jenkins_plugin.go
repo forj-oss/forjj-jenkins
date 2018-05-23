@@ -20,8 +20,9 @@ type JenkinsPluginSourceModel struct {
 
 // JenkinsPluginModel provides the structure to evaluate with template before running commands.
 type JenkinsPluginModel struct {
-	Env   map[string]string
-	Creds map[string]string
+	Env    map[string]string
+	Creds  map[string]string
+	Config YamlJenkins
 }
 
 var JPS_Model *JenkinsPluginSourceModel
@@ -53,12 +54,14 @@ type DeployApp struct {
 }
 
 type YamlSSLStruct struct {
-	CaCertificate string `json:"ca-certificate"` // CA root certificate which certify your jenkins instance.
-	Certificate   string `json:"certificate"`    // SSL Certificate file to certify your jenkins instance.
+	CaCertificate string `yaml:"ca-certificate,omitempty"` // CA root certificate which certify your jenkins instance.
+	Certificate   string `yaml:"certificate,omitempty"`    // SSL Certificate file to certify your jenkins instance.
 	key           string // key for the SSL certificate.
+	Method        string // SSL Method used in templates (none, selfsigned, manual, ...)
 }
 
 const jenkins_file = "forjj-jenkins.yaml"
+const jenkinsDeployFile = "forjj-deploy.yaml"
 const maintain_cmds_file = "maintain-cmd.yaml"
 
 func newPlugin(src, deploy string) (p *JenkinsPlugin) {

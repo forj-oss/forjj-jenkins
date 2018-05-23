@@ -74,6 +74,7 @@ func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
 	JP_Model = new(JenkinsPluginModel)
 	JP_Model.Creds = make(map[string]string)
 	JP_Model.Env = make(map[string]string)
+	JP_Model.Config = p.yaml
 	return JP_Model
 }
 

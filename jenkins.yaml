@@ -71,12 +71,15 @@ objects:
             help: "Expected jenkins instance port number."
       ssl:
         flags:
+          method:
+            help: "How SSL is managed for this Jenkins service. By default, SSL is disabled (none)"
+            default: none
           private-key:
-            help: SSL private key to use to use the ssh certificate in jenkins.
+            help: SSL private key to use to use the ssh certificate in jenkins. To use this, set ssl-method to 'manual'.
             secure: true
             cli-exported-to-actions: ["maintain"]
           certificate:
-            help: SSL Certificate file to certify your jenkins instance.
+            help: SSL Certificate file to certify your jenkins instance. To use this, set ssl-method to 'manual'.
       github-user:
         flags:
           username:

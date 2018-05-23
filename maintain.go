@@ -9,13 +9,13 @@ import (
 )
 
 // Return ok if the jenkins instance exist
-func (r *MaintainReq) check_source_existence(ret *goforjj.PluginData) (status bool) {
+func (r *MaintainReq) checkSourceExistence(ret *goforjj.PluginData) (status bool) {
 	log.Print("Checking Jenkins source code path existence.")
 
-	src_path := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
-	if _, err := os.Stat(path.Join(src_path, maintain_cmds_file)); err != nil {
+	srcPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
+	if _, err := os.Stat(path.Join(srcPath, maintain_cmds_file)); err != nil {
 		log.Printf(ret.Errorf("Unable to maintain instance name '%s' without deploy code.\n"+
-			"Use update to update it, commit, push and retry. %s.", src_path, err))
+			"Use update to update it, commit, push and retry. %s.", srcPath, err))
 		return
 	}
 
@@ -40,6 +40,11 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	p := newPlugin("", src)
 
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+
+	// Load deploy configuration
+	if !p.loadYaml(goforjj.FilesDeploy, jenkinsDeployFile, &p.yaml, ret, true) {
+		return
+	}
 
 	// Load templates.yml to get the list of deployment commands.
 	if !p.loadRunYaml(ret) {

@@ -17,11 +17,13 @@ func (t *DeployStruct) UpdateFrom(d *DeployStruct) (status bool) {
 
 func (t *YamlSSLStruct) UpdateFrom(d *SslStruct) (status bool) {
 	status = SetOrClean(&t.Certificate, d.Certificate) || status
+	status = SetIfSet(&t.Method, d.Method) || status
 	return
 }
 
 func (t *YamlSSLStruct) SetFrom(d *SslStruct) (status bool) {
 	status = SetIfSet(&t.Certificate, d.Certificate) || status
+	status = SetIfSet(&t.Method, d.Method) || status
 	return
 }
 
