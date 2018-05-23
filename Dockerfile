@@ -18,7 +18,7 @@ RUN apk update && \
     chmod +x /bin/entrypoint.sh
 
 # Required for DooD
-RUN echo "devops ALL=(root:root) NOPASSWD:/bin/docker" >> /etc/sudoers.d/docker && \
+RUN echo "devops ALL=(root:root) NOPASSWD:SETENV:/bin/docker" >> /etc/sudoers.d/docker && \
     chmod 600 /etc/sudoers.d/docker
 
 COPY templates/ /templates/
