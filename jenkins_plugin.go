@@ -131,8 +131,8 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 		}
 
 		for credName, credValue := range credList {
-			if v, found := req.Creds[credName]; found && v != "" {
-				model.Creds[credValue] = req.Creds[credName]
+			if v, found := req.Creds[credValue]; found && v != "" {
+				model.Creds[credName] = v
 			}
 		}
 
