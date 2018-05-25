@@ -12,7 +12,7 @@ import (
 // req_data contains the request data posted by forjj. Structure generated from 'jenkins.yaml'.
 // ret_data contains the response structure to return back to forjj.
 //
-func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
+func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
 	p, code := req.check_source_existence(ret)
 	if p == nil {
 		return code
@@ -48,7 +48,7 @@ func DoCreate(w http.ResponseWriter, r *http.Request, req *CreateReq, ret *gofor
 // ret_data contains the response structure to return back to forjj.
 // forjj-jenkins.yaml is loaded by default.
 //
-func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) {
+func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) {
 	p, ok := req.checkSourceExistence(ret)
 	if !ok {
 		return
@@ -97,7 +97,7 @@ func DoUpdate(w http.ResponseWriter, r *http.Request, req *UpdateReq, ret *gofor
 // req_data contains the request data posted by forjj. Structure generated from 'jenkins.yaml'.
 // ret_data contains the response structure to return back to forjj.
 //
-func DoMaintain(w http.ResponseWriter, r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
+func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
 	if !req.checkSourceExistence(ret) {
 		return
 	}
