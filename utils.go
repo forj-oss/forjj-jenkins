@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"crypto/md5"
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 func Copy(src, dst string) (written int64, err error, md5sum []byte) {
@@ -64,13 +66,48 @@ func run_cmd(command string, env []string, args ...string) (cmdlog []byte, err e
 
 	// Execute command
 	if cmdlog, err = cmd.CombinedOutput(); err != nil {
-		err = fmt.Errorf("ERROR could not spawn command. %s.", err.Error())
+		err = fmt.Errorf("ERROR could not spawn command. %s", err.Error())
 		return
 	}
 
 	gotrace.Trace("Command done")
 	if status := cmd.ProcessState.Sys().(syscall.WaitStatus); status.ExitStatus() != 0 {
-		err = fmt.Errorf("\n%s ERROR: Unable to get process status - %s: %s", command, cmd.ProcessState.String())
+		err = fmt.Errorf("\n%s ERROR: Unable to get process status - %d: %s", command, status.ExitStatus(), cmd.ProcessState.String())
 	}
 	return
+}
+
+func runFlowCmd(command string, env []string, errFct func(string), outFct func(string), args ...string) (err error) {
+	cmd := exec.Command(command, args...)
+	outReader, _ := cmd.StdoutPipe()
+	errReader, _ := cmd.StderrPipe()
+	cmd.Env = env
+	gotrace.Trace("RUNNING: %s %s", command, strings.Join(args, " "))
+
+	go func() {
+		outScanner := bufio.NewScanner(outReader)
+		for outScanner.Scan() {
+			outFct(outScanner.Text())
+		}
+	}()
+
+	go func() {
+		outScanner := bufio.NewScanner(errReader)
+		for outScanner.Scan() {
+			errFct(outScanner.Text())
+		}
+	}()
+
+	// Execute command
+	if err = cmd.Run(); err != nil {
+		err = fmt.Errorf("ERROR could not spawn command. %s", err.Error())
+		return
+	}
+
+	gotrace.Trace("Command done")
+	if status := cmd.ProcessState.Sys().(syscall.WaitStatus); status.ExitStatus() != 0 {
+		err = fmt.Errorf("\n%s ERROR: Unable to get process status - %d: %s", command, status.ExitStatus(), cmd.ProcessState.String())
+	}
+	return
+
 }
