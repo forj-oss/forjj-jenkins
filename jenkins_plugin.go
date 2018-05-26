@@ -111,9 +111,15 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 		ret.Errorf("Request issue. App instance '%s' is missing in list of object.", p.InstanceName)
 		return
 	} else {
-		if p.yaml.Deploy.Ssl.Certificate == "" && v.SslPrivateKey != "" {
-			ret.Errorf("A private key is given, but there is no Certificate data.")
-			return
+		if p.yaml.Deploy.Ssl.Method == "manual" {
+			if p.yaml.Deploy.Ssl.Certificate == "" {
+				ret.Errorf("SSL - manual method: Certificate data missing. Update your Forjfile, then do `forjj update`")
+				return
+			}
+			if v.SslPrivateKey == "" {
+				ret.Errorf("SSL - manual method: A RSA SSL private key missing. Update your forjj credential data, then do `forjj update`")
+				return
+			}
 		}
 		if model.Creds == nil {
 			model.Creds = make(map[string]string)
