@@ -107,8 +107,14 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
-	s, err := run_cmd("/bin/sh", env, "-c", p.run.RunCommand)
-	log.Printf(ret.StatusAdd(string(s)))
+	err := runFlowCmd("/bin/sh", env, 
+		func(line string) {
+			log.Printf(ret.StatusAdd(line))
+		}, 
+		func(line string) {
+			log.Printf(ret.StatusAdd(line))
+
+		}, "-c", p.run.RunCommand)
 	if err != nil {
 		curDir, _ := os.Getwd()
 		log.Printf(ret.Errorf("%s (pwd: %s)", err, curDir))
