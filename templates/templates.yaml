@@ -69,7 +69,7 @@ run_deploy:
     environment:
       CERTIFICATE_KEY:
         value: "{{ .Creds.SslPrivateKey }}"
-        if: "{{ if (and .Creds.SslPrivateKey (eq .Config.deploy.ssl.method \"manual\") ) }}true{{ end }}"
+        if: "{{ if (and .Creds.SslPrivateKey (eq .Config.Deploy.Ssl.Method \"manual\") ) }}true{{ end }}"
       ADMIN_PWD:
         value: "{{ .Creds.AdminPwd }}"
         if: "{{ .Creds.AdminPwd }}"
