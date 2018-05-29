@@ -47,7 +47,7 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 		return err
 	} else {
 		if v.Scheme == "" {
-			err = fmt.Errorf("Invalid Remote repository Url '%s'. A scheme must exist.", pi.infra_remote)
+			err = fmt.Errorf("JobDSL: Invalid Remote repository Url '%s'. A scheme must exist", pi.infra_remote)
 			ret.Errorf("%s", err)
 			return err
 		}
