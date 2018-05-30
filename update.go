@@ -4,6 +4,7 @@
 package main
 
 import (
+	"strings"
 	"log"
 	"os"
 	"path"
@@ -93,7 +94,9 @@ func addMaintainOptionValue(options map[string]goforjj.PluginOption, option, val
 func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData, status *bool) error {
 	projects := ProjectInfo{}
 	projects.set_project_info(req.Forj.ForjCommonStruct)
-	projects.set_infra_remote(req.Objects.App[req.Forj.ForjjInstanceName].SeedJobRepo)
+	instanceData := req.Objects.App[req.Forj.ForjjInstanceName]
+	projects.set_infra_remote(instanceData.SeedJobRepo)
+	projects.setIsProDeploy(strings.ToLower(instanceData.ProDeployment) == "true")
 
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra)
 }

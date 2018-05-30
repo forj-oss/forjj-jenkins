@@ -29,7 +29,7 @@ var JPS_Model *JenkinsPluginSourceModel
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
-	yaml          YamlJenkins       // jenkins.<env>.yaml source file per environment.
+	yaml          YamlJenkins       // jenkins.yaml deploy file.
 	yamlPlugin    YamlJenkinsPlugin // jenkins.yaml source file
 	source_path   string            // Source Path
 	deployPath    string            // Deployment Path
@@ -251,15 +251,13 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 		p.yamlPlugin.TemplatePath = v
 	}
 
-	jenkins_instance := r.Objects.App[r.Forj.ForjjInstanceName]
-
-	if err := p.defineTemplateDir(jenkins_instance); err != nil {
+	if err := p.defineTemplateDir(instance_data); err != nil {
 		err = fmt.Errorf("Unable to define your template source path. %s", err)
 		ret.Errorf("Unable to define your template source path. %s", err)
 		return err
 	}
 
-	p.yaml.AppExtent = jenkins_instance.Extent
+	p.yaml.AppExtent = instance_data.Extent
 
 	p.yaml.Deploy.Name = r.Forj.ForjjDeploymentEnv
 	p.yaml.Deploy.Type = r.Forj.ForjjDeploymentType
