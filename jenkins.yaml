@@ -104,6 +104,10 @@ objects:
         cli-exported-to-actions: ["maintain"]
       source-templates:
         help: "Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template."
+      pro-deployment:
+        help: true if current deployment is production one
+        default: "{{ if (eq (.Deployments.Get .Current.Deployment).Type \"PRO\") }}true{{ else }}false{{ end }}"
+
 
   features:
     default-actions: ["add", "change", "remove"]
@@ -122,8 +126,11 @@ objects:
         help: "Project name"
         required: true
       remote-type:
-        default: "{{ $Project := .Current.Name }}{{ (index .Forjfile.Repos $Project).RemoteType }}"
+        default: "{{ (index .Forjfile.Repos .Current.Name).RemoteType }}"
         help: "Define remote source  type. 'github' is used by default. Support 'git', 'github'."
+      repo-role:
+        help: Role of the repository. Can be infra, deploy or code
+        default: "{{ (index .Forjfile.Repos .Current.Name).Role }}"
     groups:
       github:
         flags:

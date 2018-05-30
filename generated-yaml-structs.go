@@ -42,6 +42,7 @@ type SslStruct struct {
 
 type AppInstanceStruct struct {
 	AdminPwd string `json:"admin-pwd"` // To replace the default simple security admin password
+	ProDeployment string `json:"pro-deployment"` // true if current deployment is production one
 	RegistryAuth string `json:"registry-auth"` // List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]
 	SeedJobRepo string `json:"seed-job-repo"` // url to the seed job repository. By default, it uses the <YourInfraRepo>. Jobs are defined under job-dsl.
 	SourceTemplates string `json:"source-templates"` // Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.
@@ -91,6 +92,7 @@ type GithubStruct struct {
 type ProjectsInstanceStruct struct {
 	Name string `json:"name"` // Project name
 	RemoteType string `json:"remote-type"` // Define remote source  type. 'github' is used by default. Support 'git', 'github'.
+	RepoRole string `json:"repo-role"` // Role of the repository. Can be infra, deploy or code
 
 	// Groups
 
@@ -291,6 +293,10 @@ const YamlDesc = "---\n" +
    "        cli-exported-to-actions: [\"maintain\"]\n" +
    "      source-templates:\n" +
    "        help: \"Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.\"\n" +
+   "      pro-deployment:\n" +
+   "        help: true if current deployment is production one\n" +
+   "        default: \"{{ if (eq (.Deployments.Get .Current.Deployment).Type \\\"PRO\\\") }}true{{ else }}false{{ end }}\"\n" +
+   "\n" +
    "\n" +
    "  features:\n" +
    "    default-actions: [\"add\", \"change\", \"remove\"]\n" +
@@ -309,8 +315,11 @@ const YamlDesc = "---\n" +
    "        help: \"Project name\"\n" +
    "        required: true\n" +
    "      remote-type:\n" +
-   "        default: \"{{ $Project := .Current.Name }}{{ (index .Forjfile.Repos $Project).RemoteType }}\"\n" +
+   "        default: \"{{ (index .Forjfile.Repos .Current.Name).RemoteType }}\"\n" +
    "        help: \"Define remote source  type. 'github' is used by default. Support 'git', 'github'.\"\n" +
+   "      repo-role:\n" +
+   "        help: Role of the repository. Can be infra, deploy or code\n" +
+   "        default: \"{{ (index .Forjfile.Repos .Current.Name).Role }}\"\n" +
    "    groups:\n" +
    "      github:\n" +
    "        flags:\n" +
