@@ -5,11 +5,13 @@ import (
 	"github.com/forj-oss/goforjj"
 	"net/url"
 	"regexp"
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type ProjectInfo struct {
 	ForjCommonStruct
 	infra_remote string
+	IsProDeployment bool `yaml:"production-deployment,omitempty"`
 }
 
 func (pi *ProjectInfo) set_project_info(forj ForjCommonStruct) {
@@ -18,6 +20,10 @@ func (pi *ProjectInfo) set_project_info(forj ForjCommonStruct) {
 
 func (pi *ProjectInfo) set_infra_remote(infra_remote string) {
 	pi.infra_remote = infra_remote
+}
+
+func (pi *ProjectInfo) setIsProDeploy(isProDeployment bool) {
+	pi.IsProDeployment = isProDeployment
 }
 
 func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruct, r *JenkinsPlugin,
@@ -57,6 +63,10 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 
 	// Retrieve list of Repository (projects) to manage
 	for name, prj := range projects {
+		if ! pi.IsProDeployment && prj.RepoRole != "code" {
+			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
+			continue
+		}
 		switch prj.RemoteType {
 		case "github":
 			r.yaml.Projects.AddGithub(name, &prj.GithubStruct, (name == InfraName))
