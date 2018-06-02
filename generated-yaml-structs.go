@@ -99,6 +99,7 @@ type GithubStruct struct {
 type ProjectsInstanceStruct struct {
 	Name string `json:"name"` // Project name
 	RemoteType string `json:"remote-type"` // Define remote source  type. 'github' is used by default. Support 'git', 'github'.
+	RepoDeployHosted string `json:"repo-deploy-hosted"` // True if the repository is managed in the current deployment context
 	RepoRole string `json:"repo-role"` // Role of the repository. Can be infra, deploy or code
 
 	// Groups
@@ -334,8 +335,13 @@ const YamlDesc = "---\n" +
    "        default: \"{{ (index .Forjfile.Repos .Current.Name).RemoteType }}\"\n" +
    "        help: \"Define remote source  type. 'github' is used by default. Support 'git', 'github'.\"\n" +
    "      repo-role:\n" +
+   "        internal: true\n" +
    "        help: Role of the repository. Can be infra, deploy or code\n" +
    "        default: \"{{ (index .Forjfile.Repos .Current.Name).Role }}\"\n" +
+   "      repo-deploy-hosted:\n" +
+   "        internal: true\n" +
+   "        help: True if the repository is managed in the current deployment context\n" +
+   "        default: \"{{ (index .Forjfile.Repos .Current.Name).IsCurrentDeploy }}\"\n" +
    "    groups:\n" +
    "      github:\n" +
    "        flags:\n" +

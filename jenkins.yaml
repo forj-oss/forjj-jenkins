@@ -138,8 +138,13 @@ objects:
         default: "{{ (index .Forjfile.Repos .Current.Name).RemoteType }}"
         help: "Define remote source  type. 'github' is used by default. Support 'git', 'github'."
       repo-role:
+        internal: true
         help: Role of the repository. Can be infra, deploy or code
         default: "{{ (index .Forjfile.Repos .Current.Name).Role }}"
+      repo-deploy-hosted:
+        internal: true
+        help: true if the repository is managed in the current deployment context
+        default: "{{ if (index .Forjfile.Repos .Current.Name).IsDeployable }}true{{ end }}"
     groups:
       github:
         flags:

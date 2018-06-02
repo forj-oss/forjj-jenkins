@@ -59,7 +59,7 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 
 	// Retrieve list of Repository (projects) to manage
 	for name, prj := range projects {
-		if !pi.IsProDeployment && prj.RepoRole != "code" {
+		if prj.RepoDeployHosted != "true" {
 			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
 			continue
 		}
