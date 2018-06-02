@@ -21,13 +21,6 @@ multibranchPipelineJob('{{ .Project.Name }}') {
       }
 {{ end }}\
   }
-{{ if .Project.InfraRepo }}\
-  configure {
-      it / factory {
-          scriptPath('apps/ci/jenkins/Jenkinsfile')
-    }
-  }
-{{ end }}
   orphanedItemStrategy {
       discardOldItems {
           numToKeep(20)
