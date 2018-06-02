@@ -4,7 +4,7 @@
 features:
   common:
   - "feature:proxy"
-  - "feature:seed-job"
+  - "{{ if .Source.Projects.DslDefault }}feature:seed-job{{ end }}"
   - "feature:basic-security"
   - "feature:tcp-slave-agent-port"
   - "feature:jenkins-pipeline"

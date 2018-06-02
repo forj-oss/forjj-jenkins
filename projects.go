@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/forj-oss/goforjj"
 	"net/url"
-	"regexp"
+
 	"github.com/forj-oss/forjj-modules/trace"
+	"github.com/forj-oss/goforjj"
 )
 
 type ProjectInfo struct {
 	ForjCommonStruct
-	infra_remote string
+	dslRepo         string
+	dslPath         string
+	isDslDefault    bool
 	IsProDeployment bool `yaml:"production-deployment,omitempty"`
 }
 
@@ -18,8 +20,15 @@ func (pi *ProjectInfo) set_project_info(forj ForjCommonStruct) {
 	pi.ForjCommonStruct = forj
 }
 
-func (pi *ProjectInfo) set_infra_remote(infra_remote string) {
-	pi.infra_remote = infra_remote
+func (pi *ProjectInfo) setDslInfo(seedJob SeedJobStruct) {
+	if seedJob.Path == "" && seedJob.Repo == "" {
+		pi.isDslDefault = true
+		pi.dslRepo = seedJob.DefaultRepo
+		pi.dslPath = seedJob.DefaultPath
+	} else {
+		pi.dslRepo = seedJob.Repo
+		pi.dslPath = seedJob.Path
+	}
 }
 
 func (pi *ProjectInfo) setIsProDeploy(isProDeployment bool) {
@@ -35,43 +44,30 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 		return
 	}
 
-	ssh_format, _ := regexp.Compile(`^(https?://)(\w[\w.-]+)((/(\w[\w.-]*)/(\w[\w.-]*))(/\w[\w.-/]*)?)$`)
-	job_path := ""
-	default_jobdsl := false
-	if rs := ssh_format.FindStringSubmatch(pi.infra_remote); rs != nil {
-		if rs[5] == pi.ForjjOrganization && rs[6] == pi.ForjjInfra {
-			job_path = "jobs-dsl"
-			default_jobdsl = true
-		} else {
-			pi.infra_remote = rs[1] + rs[2] + rs[4]
-			job_path = rs[7]
-		}
-	}
-
-	if v, err := url.Parse(pi.infra_remote); err != nil {
-		ret.Errorf("Infra remote URL issue. %s", err)
+	if v, err := url.Parse(pi.dslRepo); err != nil {
+		ret.Errorf("JobDSL: Infra remote URL issue. Check `seed-job-repo` parameter given by Forjj. %s", err)
 		return err
 	} else {
 		if v.Scheme == "" {
-			err = fmt.Errorf("JobDSL: Invalid Remote repository Url '%s'. A scheme must exist", pi.infra_remote)
+			err = fmt.Errorf("JobDSL: Invalid Remote repository Url '%s'. Check `seed-job-repo` parameter given by Forjj. A scheme must exist", pi.dslRepo)
 			ret.Errorf("%s", err)
 			return err
 		}
 	}
 	// Initialize JobDSL structure
-	r.yaml.Projects = NewProjects(pi.ForjjInstanceName, pi.infra_remote, job_path, default_jobdsl)
+	r.yaml.Projects = NewProjects(pi.ForjjInstanceName, pi.dslRepo, pi.dslPath, pi.isDslDefault)
 
 	// Retrieve list of Repository (projects) to manage
 	for name, prj := range projects {
-		if ! pi.IsProDeployment && prj.RepoRole != "code" {
+		if !pi.IsProDeployment && prj.RepoRole != "code" {
 			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
 			continue
 		}
 		switch prj.RemoteType {
 		case "github":
-			r.yaml.Projects.AddGithub(name, &prj.GithubStruct, (name == InfraName))
+			r.yaml.Projects.AddGithub(name, &prj.GithubStruct)
 		case "git":
-			r.yaml.Projects.AddGit(name, &prj.GitStruct, (name == InfraName))
+			r.yaml.Projects.AddGit(name, &prj.GitStruct)
 		}
 	}
 	IsUpdated(status)

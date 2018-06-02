@@ -9,9 +9,9 @@ ARG DOOD_DOCKER_GROUP
 
 COPY install_dood.sh /tmp
 
-ENV JENKINS_SLAVE_AGENT_PORT=50000{{ if .Projects }} \
+ENV JENKINS_SLAVE_AGENT_PORT=50000{{ if .Projects.DslDefault }} \
     SEED_JOBS_REPO={{ .Projects.DslRepo }} \
-    BUILD_DSL_SCRIPTS={{if .Projects.InfraPath }}{{ .Projects.InfraPath }}{{ end }}/{{ .Projects.DslPath }}/*.groovy{{ end }}{{ if .GithubUser.Name }} \
+    BUILD_DSL_SCRIPTS={{ .Projects.DslPath }}/*.groovy{{ end }}{{ if .GithubUser.Name }} \
     GITHUB_USER={{ .GithubUser.Name }}{{ end }}
 
 USER root

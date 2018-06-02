@@ -11,10 +11,9 @@ import (
 )
 
 type Projects struct {
-	DslRepo    string
-	DslPath    string
-	InfraPath  string
-	infra_repo bool
+	DslRepo    string  `yaml:"jobDSL-repo,omitempty"`
+	DslPath    string  `yaml:"jobDSL-path,omitempty"`
+	DslDefault bool    `yaml:"is-deploy-dsl-default,omitempty"`
 	infra_name string
 	List       map[string]Project
 }
@@ -33,31 +32,27 @@ type ProjectModel struct {
 	Source  YamlJenkins
 }
 
-func NewProjects(InstanceName, repo, Dslpath string, infra_repo bool) *Projects {
+func NewProjects(InstanceName, repo, Dslpath string, dslDefault bool) *Projects {
 	p := new(Projects)
 	p.DslPath = Dslpath
 	p.DslRepo = repo
-	if infra_repo {
-		p.InfraPath = path.Join("apps", "ci", InstanceName)
-		p.DslPath = "jobs-dsl"
-	}
 
-	p.infra_repo = infra_repo
+	p.DslDefault = dslDefault
 	p.List = make(map[string]Project)
 	return p
 }
 
-func (p *Projects) AddGithub(name string, d *GithubStruct, isInfra bool) bool {
+func (p *Projects) AddGithub(name string, d *GithubStruct) bool {
 	data := new(GithubStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p, InfraRepo: isInfra}
+	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p}
 	return true
 }
 
-func (p *Projects) AddGit(name string, d *GitStruct, isInfra bool) bool {
+func (p *Projects) AddGit(name string, d *GitStruct) bool {
 	data := new(GitStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p, InfraRepo: isInfra}
+	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p}
 	return true
 }
 
@@ -78,6 +73,11 @@ func (p *Project) Add() error {
 
 // Generates Jobs-dsl files in the given checked-out GIT repository.
 func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *goforjj.PluginData, status *bool) (_ error) {
+	if !p.DslDefault {
+		log.Printf(ret.StatusAdd("Deploy: JobDSL groovy files ignored. To generate them, unset seed-job-repo and seed-job-path."))
+		return
+	}
+	
 	template_dir := jp.template_dir
 	repo_path := jp.deployPath
 

@@ -31,6 +31,13 @@ type GithubUserStruct struct {
 	Username string `json:"github-user-username"` // github user name. Recommended. Stored as github-user credential in jenkins.
 }
 
+type SeedJobStruct struct {
+	DefaultPath string `json:"seed-job-default-path"` // Default DSL repository relative path.
+	DefaultRepo string `json:"seed-job-default-repo"` // Default DSL deployment repository url.
+	Path string `json:"seed-job-path"` // Relative path in cloned repository where jobdsl groovy files are found. By default relative path is <ApplicationName>/jobs-dsl. Note if you change the default value, forjj-jenkins won't generate groovy files for you.
+	Repo string `json:"seed-job-repo"` // Url to the seed job repository to clone. By default, it uses the deployment repository remote url. Note if you change the default value, forjj-jenkins won't generate groovy files for you.
+}
+
 type SslStruct struct {
 	Certificate string `json:"ssl-certificate"` // SSL Certificate file to certify your jenkins instance. To use this, set ssl-method to 'manual'.
 	Method string `json:"ssl-method"` // How SSL is managed for this Jenkins service. By default, SSL is disabled (none)
@@ -44,7 +51,6 @@ type AppInstanceStruct struct {
 	AdminPwd string `json:"admin-pwd"` // To replace the default simple security admin password
 	ProDeployment string `json:"pro-deployment"` // true if current deployment is production one
 	RegistryAuth string `json:"registry-auth"` // List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]
-	SeedJobRepo string `json:"seed-job-repo"` // url to the seed job repository. By default, it uses the <YourInfraRepo>. Jobs are defined under job-dsl.
 	SourceTemplates string `json:"source-templates"` // Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.
 
 	// Groups
@@ -53,6 +59,7 @@ type AppInstanceStruct struct {
 	DockerfileStruct
 	FinalImageStruct
 	GithubUserStruct
+	SeedJobStruct
 	SslStruct
 
 	Extent map[string]string `json:",omitempty"`
@@ -278,10 +285,21 @@ const YamlDesc = "---\n" +
    "            secure: true\n" +
    "            envar: \"USER_PASS\"\n" +
    "            cli-exported-to-actions: [\"maintain\"]\n" +
+   "      seed-job:\n" +
+   "        flags:\n" +
+   "          repo:\n" +
+   "            help: \"Url to the seed job repository to clone. By default, it uses the deployment repository remote url. Note if you change the default value, forjj-jenkins won't generate groovy files for you.\"\n" +
+   "          path:\n" +
+   "            help: \"Relative path in cloned repository where jobdsl groovy files are found. By default relative path is <ApplicationName>/jobs-dsl. Note if you change the default value, forjj-jenkins won't generate groovy files for you.\"\n" +
+   "          default-repo:\n" +
+   "            internal: true\n" +
+   "            help: Default DSL deployment repository url.\n" +
+   "            default: \"{{ .Forjfile.Deploy.RemoteUrl }}\"\n" +
+   "          default-path:\n" +
+   "            internal: true\n" +
+   "            help: Default DSL repository relative path.\n" +
+   "            default: \"jobs-dsl\"\n" +
    "    flags:\n" +
-   "      seed-job-repo:\n" +
-   "        help: \"url to the seed job repository. By default, it uses the <YourInfraRepo>. Jobs are defined under job-dsl.\"\n" +
-   "        default: \"{{ .Forjfile.Infra.RemoteUrl }}\"\n" +
    "      registry-auth:\n" +
    "        help: \"List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]\"\n" +
    "        secure: true\n" +
@@ -296,8 +314,6 @@ const YamlDesc = "---\n" +
    "      pro-deployment:\n" +
    "        help: true if current deployment is production one\n" +
    "        default: \"{{ if (eq (.Deployments.Get .Current.Deployment).Type \\\"PRO\\\") }}true{{ else }}false{{ end }}\"\n" +
-   "\n" +
-   "\n" +
    "  features:\n" +
    "    default-actions: [\"add\", \"change\", \"remove\"]\n" +
    "    identified_by_flag: name\n" +
@@ -324,10 +340,10 @@ const YamlDesc = "---\n" +
    "      github:\n" +
    "        flags:\n" +
    "          api-url:\n" +
-   "            default: \"{{ $Project := .Current.Name }}{{ (index .Forjfile.Repos $Project).UpstreamAPIUrl }}\"\n" +
+   "            default: \"{{ (index .Forjfile.Repos .Current.Name).UpstreamAPIUrl }}\"\n" +
    "            help: \"with remote-type = 'github', Github API Url. By default, it uses public github API.\"\n" +
    "          repo-owner:\n" +
-   "            default: \"{{ $Project := .Current.Name }}{{ (index .Forjfile.Repos $Project).Owner }}\"\n" +
+   "            default: \"{{ (index .Forjfile.Repos .Current.Name).Owner }}\"\n" +
    "            help: \"with remote-type = 'github', Repository owner. Can be a user or an organization.\"\n" +
    "          repo:\n" +
    "            default: \"{{ .Current.Name }}\"\n" +
