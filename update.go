@@ -95,7 +95,8 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	projects := ProjectInfo{}
 	projects.set_project_info(req.Forj.ForjCommonStruct)
 	instanceData := req.Objects.App[req.Forj.ForjjInstanceName]
-	projects.set_infra_remote(instanceData.SeedJobRepo)
+	projects.setDslInfo(instanceData.SeedJobStruct)
+	// TODO: Information not used. To clean it up.
 	projects.setIsProDeploy(strings.ToLower(instanceData.ProDeployment) == "true")
 
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra)

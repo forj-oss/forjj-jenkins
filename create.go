@@ -61,7 +61,8 @@ func (r *JenkinsPlugin) create_jenkins_sources(ret *goforjj.PluginData) (err err
 func (jp *JenkinsPlugin) add_projects(req *CreateReq, ret *goforjj.PluginData) error {
 	projects := ProjectInfo{}
 	projects.set_project_info(req.Forj.ForjCommonStruct)
-	projects.set_infra_remote(req.Objects.App[req.Forj.ForjjInstanceName].SeedJobRepo)
+	instanceData := req.Objects.App[req.Forj.ForjjInstanceName]
+	projects.setDslInfo(instanceData.SeedJobStruct)
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, nil, req.Forj.ForjjInfra)
 }
 
