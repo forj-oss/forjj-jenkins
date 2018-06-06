@@ -1,4 +1,4 @@
-{{/* Template is defined by ProjectModel struct (jobs_repo.go) */}}
+{{/* Template is defined by ProjectModel struct (project-model.go) */}}
 multibranchPipelineJob('{{ .Project.Name }}') {
   description('Folder for Project {{ .Project.Name }} generated and maintained by Forjj. To update it use forjj update')
   branchSources {
