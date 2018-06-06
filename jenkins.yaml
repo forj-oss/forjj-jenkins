@@ -102,7 +102,7 @@ objects:
           default-path:
             internal: true
             help: Default DSL repository relative path.
-            default: "jobs-dsl"
+            default: "{{ .Current.Name}}/jobs-dsl"
     flags:
       registry-auth:
         help: "List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]"
