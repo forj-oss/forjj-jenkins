@@ -86,6 +86,10 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		env = append(env, "SRC="+path.Join(v, instance)+"/")
 		log.Printf("DOOD_SRC detected. Env added : 'SRC' = '%s'", path.Join(v, instance)+"/")
 	}
+	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
+		env = append(env, "DEPLOY="+path.Join(v, instance)+"/")
+		log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", path.Join(v, instance)+"/")
+	}
 
 	model := p.Model()
 	for key, env_to_set := range p.run.Env {
@@ -107,10 +111,10 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
-	err := runFlowCmd("/bin/sh", env, 
+	err := runFlowCmd("/bin/sh", env,
 		func(line string) {
 			log.Printf(ret.StatusAdd(line))
-		}, 
+		},
 		func(line string) {
 			log.Printf(ret.StatusAdd(line))
 
