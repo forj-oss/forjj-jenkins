@@ -101,7 +101,7 @@ objects:
             default: "{{ .Forjfile.Deploy.RemoteUrl }}"
           default-path:
             internal: true
-            help: Default DSL repository relative path.
+            help: "Default DSL repository relative path. Relative to Deploy repository for the instance. ie: <DeployRepoPath>/<DeployName>"
             default: "{{ .Current.Name}}/jobs-dsl"
     flags:
       registry-auth:

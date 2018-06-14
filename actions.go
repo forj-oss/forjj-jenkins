@@ -18,8 +18,6 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 		return code
 	}
 
-	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
-
 	if p.initialize_from(req, ret) != nil {
 		return
 	}
@@ -53,8 +51,6 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	if !ok {
 		return
 	}
-
-	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
 
 	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, false) {
 		return

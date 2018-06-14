@@ -29,18 +29,19 @@ var JPS_Model *JenkinsPluginSourceModel
 var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
-	yaml          YamlJenkins       // jenkins.yaml deploy file.
-	yamlPlugin    YamlJenkinsPlugin // jenkins.yaml source file
-	source_path   string            // Source Path
-	deployPath    string            // Deployment Path
-	deployEnv     string            // Deployment environment where files have to be generated.
-	InstanceName  string            // Instance name where files have to be generated.
-	template_dir  string
-	template_file string
-	templates_def YamlTemplates // See templates.go. templates.yaml structure.
-	run           RunStruct
-	sources       map[string]TmplSource
-	templates     map[string]TmplSource
+	yaml              YamlJenkins       // jenkins.yaml deploy file.
+	yamlPlugin        YamlJenkinsPlugin // jenkins.yaml source file
+	source_path       string            // Source Path
+	deploysParentPath string            // Deployment repository path
+	deployPath        string            // Deployment Path (deployRepoPath + deployEnv + InstanceName)
+	deployEnv         string            // Deployment environment where files have to be generated.
+	InstanceName      string            // Instance name where files have to be generated.
+	template_dir      string
+	template_file     string
+	templates_def     YamlTemplates // See templates.go. templates.yaml structure.
+	run               RunStruct
+	sources           map[string]TmplSource
+	templates         map[string]TmplSource
 }
 
 type DeployApp struct {
@@ -64,12 +65,19 @@ const jenkins_file = "forjj-jenkins.yaml"
 const jenkinsDeployFile = "forjj-deploy.yaml"
 const maintain_cmds_file = "maintain-cmd.yaml"
 
-func newPlugin(src, deploy string) (p *JenkinsPlugin) {
+func newPlugin(srcRepoPath, deploysMountPath string) (p *JenkinsPlugin) {
 	p = new(JenkinsPlugin)
 
-	p.source_path = src
-	p.deployPath = deploy
+	p.source_path = srcRepoPath
+	p.deploysParentPath = deploysMountPath
 	return
+}
+
+// setEnv set the deployment environment where deploy files have to be generated.
+func (p *JenkinsPlugin) setEnv(deployEnv, instanceName string) {
+	p.deployPath = path.Join(p.deploysParentPath, deployEnv, instanceName)
+	p.deployEnv = deployEnv
+	p.InstanceName = instanceName
 }
 
 func (p *JenkinsPlugin) defineTemplateDir(jenkins_instance AppInstanceStruct) error {

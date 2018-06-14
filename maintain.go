@@ -37,8 +37,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 		log.Printf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
 		return true
 	}
-	p := newPlugin("", src)
-
+	p := newPlugin("", mount)
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
 
 	// Load deploy configuration
