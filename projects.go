@@ -83,7 +83,7 @@ func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *gofor
 			return err
 		} else if u {
 			IsUpdated(status)
-			ret.AddFile(goforjj.FilesDeploy, path.Join(instance_name, p.DslPath, name+".groovy"))
+			ret.AddFile(goforjj.FilesDeploy, path.Join(p.DslPath, name+".groovy"))
 			log.Printf(ret.StatusAdd("Deploy: Project '%s' (%s) generated", name, path.Join(p.DslPath, name+".groovy")))
 		}
 	}
