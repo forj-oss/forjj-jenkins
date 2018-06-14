@@ -86,9 +86,11 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		env = append(env, "SRC="+path.Join(v, instance)+"/")
 		log.Printf("DOOD_SRC detected. Env added : 'SRC' = '%s'", path.Join(v, instance)+"/")
 	}
-	deployPath := path.Join(p.deployPath, p.deployEnv)
-	env = append(env, "DEPLOY="+deployPath)
-	log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", deployPath)
+	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
+		deployPath := v
+		env = append(env, "DEPLOY="+deployPath)
+		log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", deployPath)
+	}
 
 	model := p.Model()
 	for key, env_to_set := range p.run.Env {
