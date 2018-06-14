@@ -15,22 +15,16 @@ import (
 func (r *CreateReq) check_source_existence(ret *goforjj.PluginData) (p *JenkinsPlugin, httpCode int) {
 	log.Printf("Checking Jenkins source code existence.")
 	src := path.Join(r.Forj.ForjjSourceMount, r.Forj.ForjjInstanceName)
-	deploy := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 	if _, err := os.Stat(path.Join(src, jenkins_file)); err == nil {
 		log.Printf(ret.Errorf("Unable to create the jenkins source code for instance name '%s' which already exist.\nUse 'update' to update it (or update %s), and 'maintain' to update jenkins according to his configuration.", r.Forj.ForjjInstanceName, src))
 		return nil, 419 // Abort message returned to forjj.
 	}
 
-	p = newPlugin(src, deploy)
+	p = newPlugin(src, r.Forj.ForjjDeployMount)
+	p.setEnv(r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
 	log.Printf(ret.StatusAdd("environment checked."))
 	return
-}
-
-// setEnv set the deployment environment where deploy files have to be generated.
-func (r *JenkinsPlugin) setEnv(deployEnv, instanceName string) {
-	r.deployEnv = deployEnv
-	r.InstanceName = instanceName
 }
 
 // We assume template source file is loaded.

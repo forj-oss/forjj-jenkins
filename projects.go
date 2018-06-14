@@ -50,7 +50,7 @@ func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *gofor
 	}
 
 	template_dir := jp.template_dir
-	repo_path := jp.deployPath
+	repo_path := path.Join(jp.deploysParentPath, jp.deployEnv)
 
 	if f, err := os.Stat(repo_path); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *gofor
 		}
 	} else {
 		if !f.IsDir() {
-			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", repo_path))
+			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", jobs_dsl_path))
 		}
 	}
 

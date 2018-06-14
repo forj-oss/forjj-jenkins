@@ -4,10 +4,10 @@
 package main
 
 import (
-	"strings"
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/forj-oss/goforjj"
 )
@@ -27,9 +27,9 @@ func (r *UpdateReq) checkSourceExistence(ret *goforjj.PluginData) (p *JenkinsPlu
 		ret.Errorf("Unable to update jenkins instances. '%s'/'%s' is inexistent or innacessible. %s", r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, err)
 		return
 	}
-	deployPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
-	p = newPlugin(srcPath, deployPath)
+	p = newPlugin(srcPath, r.Forj.ForjjDeployMount)
+	p.setEnv(r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 
 	ret.StatusAdd("environment checked.")
 	return p, true
