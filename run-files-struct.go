@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path"
 	"fmt"
 	"github.com/forj-oss/goforjj"
 	"log"
@@ -17,7 +18,7 @@ type RunFileStruct struct {
 }
 
 // createFiles loop on files to create them if needed.
-func (fs RunFilesStruct)createFiles(model *JenkinsPluginModel, ret *goforjj.PluginData) error {
+func (fs RunFilesStruct)createFiles(model *JenkinsPluginModel, deployPath string, ret *goforjj.PluginData) error {
 	for key, env_to_set := range fs {
 		if env_to_set.If != "" {
 			// check if If evaluation return something or not. if not, the environment key won't be created.
@@ -32,7 +33,7 @@ func (fs RunFilesStruct)createFiles(model *JenkinsPluginModel, ret *goforjj.Plug
 		if v, err := Evaluate(env_to_set.Value, model); err != nil {
 			ret.Errorf("Error in evaluating '%s'. %s", key, err)
 		} else {
-			if err := env_to_set.createFile(key, v) ; err != nil {
+			if err := env_to_set.createFile(deployPath, key, v) ; err != nil {
 				return fmt.Errorf(ret.Errorf("%s", err))
 			}
 			fd, err := os.Create(key)
@@ -57,9 +58,8 @@ func (fs RunFilesStruct)deleteFiles() error {
 	return nil
 }
 
-
-func (f RunFileStruct) createFile(name, value string) error {
-	fd, err := os.Create(name)
+func (f RunFileStruct) createFile(deployPath, name, value string) error {
+	fd, err := os.Create(path.Join(deployPath, name))
 	if err != nil {
 		return fmt.Errorf("Unable to create %s. %s", name, err)
 	}

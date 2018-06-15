@@ -111,8 +111,8 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
-	if err := p.run.Files.createFiles(model, ret); err != nil {
-		log.Printf(ret.Errorf("Deployment '%s'. Unable to instantiate. %s", p.yaml.Deploy.Deployment.To, err))
+	if err := p.run.Files.createFiles(model, p.deployPath, ret); err != nil {
+		log.Printf(ret.Errorf("Deployment '%s'. %s", p.yaml.Deploy.Deployment.To, err))
 		return
 	}
 
