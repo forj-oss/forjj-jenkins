@@ -111,6 +111,11 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 		}
 	}
 
+	if err := p.run.Files.createFiles(model, ret); err != nil {
+		log.Printf(ret.Errorf("Deployment '%s'. Unable to instantiate. %s", p.yaml.Deploy.Deployment.To, err))
+		return
+	}
+
 	err := runFlowCmd("/bin/sh", env,
 		func(line string) {
 			log.Printf(ret.StatusAdd(line))
@@ -119,10 +124,12 @@ func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths,
 			log.Printf(ret.StatusAdd(line))
 
 		}, "-c", p.run.RunCommand)
+
+	p.run.Files.deleteFiles()
+
 	if err != nil {
 		curDir, _ := os.Getwd()
 		log.Printf(ret.Errorf("%s (pwd: %s)", err, curDir))
 	}
-
 	return true
 }

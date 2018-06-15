@@ -64,7 +64,9 @@ type EnvStruct struct {
 type RunStruct struct {
 	RunCommand string               `yaml:"run"`
 	Env        map[string]EnvStruct `yaml:"environment"`
+	Files      RunFilesStruct
 }
+
 
 // Model creates the Model data used by gotemplates in maintain context.
 func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
