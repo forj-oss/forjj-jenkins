@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -66,7 +67,6 @@ type RunStruct struct {
 	Env        map[string]EnvStruct `yaml:"environment"`
 	Files      RunFilesStruct
 }
-
 
 // Model creates the Model data used by gotemplates in maintain context.
 func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
@@ -272,7 +272,9 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 
 	data = strings.Replace(data, "}}\\\n", "}}", -1)
 
-	t, err := template.New(src).Funcs(template.FuncMap{}).Parse(data)
+	t, err := template.New(src).Funcs(template.FuncMap{
+		"lookup": lookup,
+	}).Parse(data)
 	if err != nil {
 		return false, fmt.Errorf("Template issue. %s", err)
 	}
@@ -302,4 +304,12 @@ func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, d
 		updated = updated || u
 	}
 	return
+}
+
+func lookup(m map[string]interface{}, key string) (interface{}, error) {
+	val, ok := m[key]
+	if !ok {
+		return nil, errors.New("missing key " + key)
+	}
+	return val, nil
 }
