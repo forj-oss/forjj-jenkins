@@ -17,6 +17,7 @@ type RunFileStruct struct {
 	RemoveWhenDone bool   `yaml:"remove-when-done"`
 	Value          string `yaml:"content"`
 	If             string
+	CreateSubDir   bool `yaml:"create-subdir"`
 }
 
 // createFiles loop on files to create them if needed.
@@ -61,6 +62,16 @@ func (fs RunFilesStruct) deleteFiles() error {
 }
 
 func (f RunFileStruct) createFile(deployPath, name, value string) error {
+	filePath := path.Dir(path.Join(deployPath, name))
+
+	if _, err := os.Stat(filePath); err != nil && os.IsNotExist(err) && f.CreateSubDir {
+		if err = os.MkdirAll(filePath, 0755); err != nil {
+			return fmt.Errorf("Unable to create '%s'. %s", filePath, err)
+		} else {
+			log.Printf("Path '%s' created", filePath)
+		}
+	}
+
 	fd, err := os.Create(path.Join(deployPath, name))
 	if err != nil {
 		return fmt.Errorf("Unable to create %s. %s", name, err)
