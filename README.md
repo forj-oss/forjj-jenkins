@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Jenkins FORJJ plugin generate runnable source code to create and maintain a simple jenkins component of your forge.
+Jenkins FORJJ plugin generate runnable source code to add (create and maintain) a jenkins component to your forge.
 
 By default, it implements latest **Jenkins 2.x** with **pipeline**, several **jenkins plugins**, **basic security rights** and a collection of scripts to enhance jenkins management from code perspective.
 
@@ -32,10 +32,11 @@ Using forjj, it is quite easy.
 
 By default, this will create a Jenkins container started in your docker host (Forjj DooD) and and become accessible at http://localhost:8080
 
-Behind the scene, forjj-jenkins will generate a collection of deployment files in your deployment repository from the [forjj-jenkins templates files](templates)
+Behind the scene, forjj-jenkins generates a collection of deployment files in your deployment repository from the [forjj-jenkins templates files](templates).
+
 For details about how templates works or create you own templates, read [the Jenkins source Templates section](#jenkins_source_templates)
 
-## Jenkins source Templates
+## Jenkins source templates
 
 All jenkins source files are generated from a collection of source templates (jenkins source model).
 For forjj purpose and example, a basic templates are located under templates directory in forjj-jenkins container and is used by default.
@@ -54,28 +55,28 @@ sources:
 run_deploy:
 ```
 
-This example will do nothing...
+This example will do nothing... So the next will be to ask forjj-jenkins to generate files for your deployment. 
 
-As soon as you want to ask forjj-jenkins to generate files for your deployment, you will need few things:
+Here is what you will need to do:
 
 1. Set `applications/<instanceName>/deploy-to` if default `docker` does not make sense for you.
-2. Add `<deploy-to Name>` under `sources` and `run_deploy` of your templates.yaml
-
+2. Add `<deploy-to Name>` under `sources`, `run_deploy` and optionally `build_deploy` of your templates.yaml
 3. Declare the list of files to create/generate. Files are generated in your deployment repository under `<instance Name>/`
     
-  - create a description text section of the file to copy/generate to store few sub keys
-    - set `sources/<deploy-to Name or common>/template` with a relative path to the GO template source file. Destination file will be generated with the relative path under `<instance Name>/`
-        `template` and `source` are exclusive. if you set both, an error will occur.
-    - set `sources/<deploy-to Name or common>/source` with a relative path to the source file to copy. Destination file will be copied with the relative path under `<instance Name>/`
-        `template` and `source` are exclusive. if you set both, an error will occur.
-    - set `sources/<deploy-to Name or common>/chmod` to set file mode in octal representation. Default is 0644.
-    - set `sources/<deploy-to Name or common>/tags` to a paired string to use as template tag. Used by `template`. Default is `{{}}`
-        ex: Ansible use `{{}}` by jinja2 template mechanism. So, to avoid conflicts, you can set `#{{}}#` to interpret forjj-jenkins template tags.
-    - set `sources/<deploy-to Name or common>/if` to determine if the file have to be copied or generated. 
+  create a description text section of the file to copy/generate to store few sub keys:
+  - set `sources/<deploy-to Name or common>/template` with a relative path to the GO template source file. Destination file will be generated with the relative path under `<instance Name>/`
+      `template` and `source` are exclusive. if you set both, an error will occur.
+  - set `sources/<deploy-to Name or common>/source` with a relative path to the source file to copy. Destination file will be copied with the relative path under `<instance Name>/`
+      `template` and `source` are exclusive. if you set both, an error will occur.
+  - set `sources/<deploy-to Name or common>/chmod` to set file mode in octal representation. Default is 0644.
+  - set `sources/<deploy-to Name or common>/tags` to a paired string to use as template tag. Used by `template`. Default is `{{}}`
+      ex: Ansible use `{{}}` by jinja2 template mechanism. So, to avoid conflicts, you can set `#{{}}#` to interpret forjj-jenkins template tags.
+  - set `sources/<deploy-to Name or common>/if` to determine if the file have to be copied or generated. 
 
-        if `if` is set to a non empty string, the file will be copied/generated.
-        The condition is made with GO template to output an empty string or not. ex: `"{{ index .Creds \"app-jenkins-aws-access-key\" }}"`
-        The string can be interpreted by GO template to determine if the file needs to be copied/generated or not. For template data model see next section [template data model](#template_data_model).
+      if `if` is set to a non empty string, the file will be copied/generated.
+      The condition is made with GO template to output an empty string or not. ex: `"{{ index .Creds \"app-jenkins-aws-access-key\" }}"`
+      The string can be interpreted by GO template to determine if the file needs to be copied/generated or not. For template data model see next section [template data model](#template_data_model).
+
 4. Define build & deploy commands to execute
   - set `build_deploy/<deploy-to Name or common>/run` with a shell command to execute
   - set `build_deploy/<deploy-to Name or common>/run/environment` with a list of shell environment variable to define
@@ -100,8 +101,8 @@ As soon as you want to ask forjj-jenkins to generate files for your deployment, 
     - under this section, set `<Your Environment Variable>/remove-when-done:` to false if you do not want to remove the file when shell command exits. Default is true.
     - under this section, set `<Your Environment Variable>/create-subdirs:` to true if you want to create relative sub directory if missing. Default is false.
 
+Ex:
 
-Ex: 
 ```yaml
 ---
 sources:
@@ -129,14 +130,15 @@ run_deploy:
 
 ## Forjfile plugin options
 
-forjj-jenkins has several objects that can be setup.
+forjj-jenkins has several objects and that can be defined in your Forjfile.
 
 For details, read [jenkins.yaml](jenkins.yaml)
 
+**NOTE**: In short future, forjj will show up all plugins options with something like `forjj show`
 
 ## Contribution
 
-Feel free to contribute and create a pul request or issues.
+Feel free to contribute and create a pull request or issue.
 
 For details on contribution, see CONTRIBUTION.md
 
@@ -167,21 +169,18 @@ Currently, the embedded jenkins template implements the following:
 This list of elements are not exhaustive and can be updated time to time. Please refer to the (templates.yaml)[templates/templates.yaml] for latest updates.
 
 ## github upstream with pull-request flow setting.
-The github integration will update your `infra/ci/jenkins-ci` with the following code.
 
-- ghprb feature
-- 3 Jobs DSL for each project identified under `infra/jobs-dsl/<project>/`
-  - `<project>_PR` : Pull request job
-  - `<project>_MASTER` : Pull request merge job
-  - `<project>_RELEASE` : Master branch tagging job and build code.
+The github integration will update your `<infra>/ci/<instance Name>` with the following code.
 
-## Other SCM?
+- `pipeline github` feature
+- 1 Jobs DSL for each project identified under `<deploy Repo>/<instance Name>/jobs-dsl/*.groovy`
+
+### Other SCM
 
 Currently this jenkins Forjj plugin do not have any other upstream integration.
 But this CI orchestrator has been designed to easily add a new one, like gitlab or other flows.
 If you want to add you SCM/Jenkins integration, consider contribution to this repository.
 
 For details on contribution, see CONTRIBUTION.md
-
 
 Forj team
