@@ -26,6 +26,7 @@ type YamlTemplates struct {
 	Features TmplFeatures
 	Sources  TmplSources
 	Run      map[string]RunStruct `yaml:"run_deploy"`
+	Build    map[string]RunStruct `yaml:"run_build"`
 	Variants map[string]string
 }
 
