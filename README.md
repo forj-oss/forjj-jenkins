@@ -28,7 +28,11 @@ Using forjj, it is quite easy.
 
 2. Run `forjj update` (or `forjj create` when you create your forge, the first time.)
 3. Run `forjj maintain dev` (`dev` is a deployment example name. See Forjfile for details)
-4. Check at http://localhost:8080. The admin password is `MyAdmin2016` (set by default for demo)
+4. Check at http://localhost:8080. 
+ 
+   The admin password is `MyAdmin2016` by default.
+  
+   To change it, call `forjj secrets set app/<Instance Name>/admin-pwd`
 
 By default, this will create a Jenkins container started in your docker host (Forjj DooD) and become accessible at http://localhost:8080
 
