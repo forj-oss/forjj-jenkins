@@ -2,6 +2,7 @@
 package main
 
 import (
+	"forjj-jenkins/reportlogs"
 	"log"
 	"net/http"
 
@@ -17,6 +18,18 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 	if p == nil {
 		return code
 	}
+
+	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+		"reportLog": func(format string, parameters ...interface{}) {
+			log.Printf(ret.StatusAdd(format, parameters...))
+		},
+		"reportError": func(format string, parameters ...interface{}) {
+			log.Printf(ret.Errorf(format, parameters...))
+		},
+		"pluginLog": func(format string, parameters ...interface{}) {
+			log.Printf(format, parameters...)
+		},
+	})
 
 	if p.initialize_from(req, ret) != nil {
 		return
@@ -51,6 +64,18 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	if !ok {
 		return
 	}
+
+	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+		"reportLog": func(format string, parameters ...interface{}) {
+			log.Printf(ret.StatusAdd(format, parameters...))
+		},
+		"reportError": func(format string, parameters ...interface{}) {
+			log.Printf(ret.Errorf(format, parameters...))
+		},
+		"pluginLog": func(format string, parameters ...interface{}) {
+			log.Printf(format, parameters...)
+		},
+	})
 
 	if !p.loadYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, false) {
 		return
@@ -97,6 +122,18 @@ func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (htt
 	if !req.checkSourceExistence(ret) {
 		return
 	}
+
+	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+		"reportLog": func(format string, parameters ...interface{}) {
+			log.Printf(ret.StatusAdd(format, parameters...))
+		},
+		"reportError": func(format string, parameters ...interface{}) {
+			log.Printf(ret.Errorf(format, parameters...))
+		},
+		"pluginLog": func(format string, parameters ...interface{}) {
+			log.Printf(format, parameters...)
+		},
+	})
 
 	// loop on list of jenkins instances defined by a collection of */jenkins.yaml
 	if !req.Instantiate(req, ret) {

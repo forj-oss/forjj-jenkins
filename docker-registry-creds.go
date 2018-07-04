@@ -1,12 +1,13 @@
 package main
 
 import (
+	log "forjj-jenkins/reportlogs"
 	"encoding/base64"
 	"fmt"
-	"github.com/forj-oss/forjj-modules/trace"
-	"log"
 	"regexp"
 	"strings"
+
+	"github.com/forj-oss/forjj-modules/trace"
 )
 
 type DockerAuths struct {
@@ -20,13 +21,12 @@ type DockerRegistryCredsInfo struct {
 
 func (a *DockerAuths) authenticate(server string) error {
 	if _, found := a.Auths[server]; !found {
-		return fmt.Errorf("Unable to authenticate to docker registry '%s'. Server not found.", server)
+		return fmt.Errorf("Unable to authenticate to docker registry '%s'. Server not found", server)
 	}
 	auth := a.Auths[server]
 	gotrace.SetDebug()
 	if cmdlog, err := run_cmd("sudo", nil, "docker", "login", "-u", auth.user, "-p", auth.password, server); err != nil {
-		log.Printf("Unable to authenticate. %s. docker output: %s", err, cmdlog)
-		return err
+		log.Reportf("Unable to authenticate. %s. docker output: %s", err, cmdlog)
 	} else {
 		log.Printf("%s", cmdlog)
 	}

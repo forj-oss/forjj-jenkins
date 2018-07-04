@@ -40,6 +40,7 @@ type JenkinsPlugin struct {
 	template_file     string
 	templates_def     YamlTemplates // See templates.go. templates.yaml structure.
 	run               RunStruct
+	build             RunStruct
 	sources           map[string]TmplSource
 	templates         map[string]TmplSource
 }
@@ -385,6 +386,10 @@ func (p *JenkinsPlugin) saveRunYaml(ret *goforjj.PluginData, status *bool) (_ er
 
 func (p *JenkinsPlugin) loadRunYaml(ret *goforjj.PluginData) (_ bool) {
 	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.run, ret, false)
+}
+
+func (p *JenkinsPlugin) loadBuildYaml(ret *goforjj.PluginData) (_ bool) {
+	return p.loadYaml(goforjj.FilesDeploy, maintain_cmds_file, &p.build, ret, false)
 }
 
 func (p *JenkinsPlugin) SetTemplateDir(templatePath string) (err error) {
