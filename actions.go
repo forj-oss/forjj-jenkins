@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/forj-oss/forjj-modules/trace"
+
 	"github.com/forj-oss/goforjj"
 )
 
@@ -70,7 +72,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 			log.Printf(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
-			log.Printf(ret.Errorf(format, parameters...))
+			gotrace.Error(ret.Errorf(format, parameters...))
 		},
 		"pluginLog": func(format string, parameters ...interface{}) {
 			log.Printf(format, parameters...)

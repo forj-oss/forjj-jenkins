@@ -43,7 +43,7 @@ func (r *reportLogs) setLogsFunc(logsFunc map[string]func(string, ...interface{}
 			log.Printf(format, parameters...)
 		}
 	}
-
+	r.bErr = false
 }
 
 // reportLog call the log function registered

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"path"
-	"os"
 	log "forjj-jenkins/reportlogs"
+	"os"
+	"path"
 )
 
 type RunStruct struct {
@@ -38,11 +38,16 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 	if v := os.Getenv("DOOD_SRC"); v != "" {
 		env = append(env, "SRC="+path.Join(v, instance)+"/")
 		log.Printf("DOOD_SRC detected. Env added : 'SRC' = '%s'", path.Join(v, instance)+"/")
+	} else {
+		env = append(env, "SRC=/deploy/")
 	}
+
 	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
 		deployPath := v
 		env = append(env, "DEPLOY="+deployPath)
 		log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", deployPath)
+	} else {
+		env = append(env, "DEPLOY="+deployPath)
 	}
 
 	for key, envToSet := range r.Env {
@@ -70,6 +75,10 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 
 	if log.HasReportedErrors() {
 		return fmt.Errorf("Unable to run command. Errors detected")
+	}
+
+	if err = os.Chdir(deployPath); err != nil {
+		return fmt.Errorf("Unable to move to '%s'. %s", err)
 	}
 
 	log.Reportf("Running '%s'", r.RunCommand)
