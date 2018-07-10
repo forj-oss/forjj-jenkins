@@ -36,18 +36,30 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 
 	env := os.Environ()
 	if v := os.Getenv("DOOD_SRC"); v != "" {
-		env = append(env, "SRC="+path.Join(v, instance)+"/")
-		log.Printf("DOOD_SRC detected. Env added : 'SRC' = '%s'", path.Join(v, instance)+"/")
+		log.Printf("DOOD detected.")
+		srcPath := path.Join(v, instance) + "/"
+		env = append(env, "SRC="+srcPath)
+		log.Printf("Env added : 'SRC' = '%s'", srcPath)
 	} else {
 		env = append(env, "SRC=/deploy/")
 	}
 
 	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
-		deployPath := v
+		deployPath := path.Join(v, instance) + "/"
 		env = append(env, "DEPLOY="+deployPath)
-		log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", deployPath)
+		log.Printf("Env added : 'DEPLOY' = '%s'", deployPath)
 	} else {
 		env = append(env, "DEPLOY="+deployPath)
+		log.Printf("Env added : 'DEPLOY' = '%s'", deployPath)
+	}
+	if v := os.Getenv("DOCKER_DOOD"); v != "" {
+		env = append(env, "DOCKER_DOOD="+v)
+		log.Printf("Env added : 'DOCKER_DOOD' = '%s'", v)
+	}
+
+	if v := os.Getenv("DOCKER_DOOD_BECOME"); v != "" {
+		env = append(env, "DOCKER_DOOD_BECOME="+v)
+		log.Printf("Env added : 'DOCKER_DOOD_BECOME' = '%s'", v)
 	}
 
 	for key, envToSet := range r.Env {
@@ -78,10 +90,10 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 	}
 
 	if err = os.Chdir(deployPath); err != nil {
-		return fmt.Errorf("Unable to move to '%s'. %s", err)
+		return fmt.Errorf("Unable to move to '%s'. %s", deployPath, err)
 	}
 
-	log.Reportf("Running '%s'", r.RunCommand)
+	log.Reportf("Running '%s' from '%s'", r.RunCommand, deployPath)
 
 	err = runFlowCmd("/bin/sh", env,
 		func(line string) {
@@ -94,9 +106,5 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 
 	r.Files.deleteFiles()
 
-	if err != nil {
-		curDir, _ := os.Getwd()
-		return fmt.Errorf("%s (pwd: %s)", err, curDir)
-	}
-	return nil
+	return
 }
