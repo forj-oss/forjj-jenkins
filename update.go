@@ -77,16 +77,17 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra)
 }
 
-func (jp *JenkinsPlugin) runBuildDeploy(req *UpdateReq, updated *bool) (err error) {
-	auths := NewDockerAuths(req.Objects.App[jp.InstanceName].RegistryAuth)
-
+func (jp *JenkinsPlugin) runBuildDeploy(creds map[string]string) (err error) {
 	run, found := jp.templates_def.Build[jp.yaml.Deploy.Deployment.To]
 	if !found {
 		log.Printf("No run_build section defined for deploy-to=%s. No build processed. If you need one, create run_build/%s: in templates.yaml", jp.deployEnv, jp.deployEnv)
 		return
 	}
 
-	if err = run.run(jp.InstanceName, jp.deployPath, jp.Model(), auths); err != nil {
+	model := jp.Model()
+	model.loadCreds(jp.InstanceName, creds)
+
+	if err = run.run(jp.InstanceName, jp.deployPath, model, jp.auths); err != nil {
 		log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)
 		return
 	}

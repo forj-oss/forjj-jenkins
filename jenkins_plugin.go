@@ -18,15 +18,7 @@ type JenkinsPluginSourceModel struct {
 	Source YamlJenkins
 }
 
-// JenkinsPluginModel provides the structure to evaluate with template before running commands.
-type JenkinsPluginModel struct {
-	Env    map[string]string
-	Creds  map[string]string
-	Config YamlJenkins
-}
-
 var JPS_Model *JenkinsPluginSourceModel
-var JP_Model *JenkinsPluginModel
 
 type JenkinsPlugin struct {
 	yaml              YamlJenkins       // jenkins.yaml deploy file.
@@ -43,6 +35,7 @@ type JenkinsPlugin struct {
 	sources           map[string]TmplSource
 	templates         map[string]TmplSource
 	built             map[string]TmplSource
+	auths             *DockerAuths
 }
 
 type DeployApp struct {
@@ -137,24 +130,7 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 			model.Env = make(map[string]string)
 		}
 
-		// Predefine credentials from jenkins.yaml
-		appPrefix := "app-" + p.InstanceName + "-"
-		credList := map[string]string{
-			"SslPrivateKey":      appPrefix + "ssl-private-key",
-			"AdminPwd":           appPrefix + "admin-pwd",
-			"GithubUserPassword": appPrefix + "github-user-password",
-		}
-
-		for credName, credValue := range credList {
-			if v, found := req.Creds[credValue]; found && v != "" {
-				model.Creds[credName] = v
-			}
-		}
-
-		// Extended Credentials
-		for credName, credValue := range req.Creds {
-			model.Creds[credName] = credValue
-		}
+		model.loadCreds(p.InstanceName, req.Creds)
 
 		model.Env["Username"] = req.Forj.ForjjUsername
 	}
