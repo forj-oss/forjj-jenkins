@@ -97,10 +97,10 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 
 	err = runFlowCmd("/bin/sh", env,
 		func(line string) {
-			log.Reportf(line)
+			log.Reportf("%s", line)
 		},
 		func(line string) {
-			log.Reportf(line)
+			log.Reportf("%s", line)
 
 		}, "-c", r.RunCommand)
 
