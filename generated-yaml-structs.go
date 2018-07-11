@@ -32,7 +32,7 @@ type GithubUserStruct struct {
 }
 
 type SeedJobStruct struct {
-	DefaultPath string `json:"seed-job-default-path"` // Default DSL repository relative path.
+	DefaultPath string `json:"seed-job-default-path"` // Default DSL repository relative path. Relative to Deploy repository for the instance. ie: <DeployRepoPath>/<DeployName>
 	DefaultRepo string `json:"seed-job-default-repo"` // Default DSL deployment repository url.
 	Path string `json:"seed-job-path"` // Relative path in cloned repository where jobdsl groovy files are found. By default relative path is <ApplicationName>/jobs-dsl. Note if you change the default value, forjj-jenkins won't generate groovy files for you.
 	Repo string `json:"seed-job-repo"` // Url to the seed job repository to clone. By default, it uses the deployment repository remote url. Note if you change the default value, forjj-jenkins won't generate groovy files for you.
@@ -99,7 +99,7 @@ type GithubStruct struct {
 type ProjectsInstanceStruct struct {
 	Name string `json:"name"` // Project name
 	RemoteType string `json:"remote-type"` // Define remote source  type. 'github' is used by default. Support 'git', 'github'.
-	RepoDeployHosted string `json:"repo-deploy-hosted"` // True if the repository is managed in the current deployment context
+	RepoDeployHosted string `json:"repo-deploy-hosted"` // true if the repository is managed in the current deployment context
 	RepoRole string `json:"repo-role"` // Role of the repository. Can be infra, deploy or code
 
 	// Groups
@@ -298,14 +298,14 @@ const YamlDesc = "---\n" +
    "            default: \"{{ .Forjfile.Deploy.RemoteUrl }}\"\n" +
    "          default-path:\n" +
    "            internal: true\n" +
-   "            help: Default DSL repository relative path.\n" +
-   "            default: \"jobs-dsl\"\n" +
+   "            help: \"Default DSL repository relative path. Relative to Deploy repository for the instance. ie: <DeployRepoPath>/<DeployName>\"\n" +
+   "            default: \"{{ .Current.Name}}/jobs-dsl\"\n" +
    "    flags:\n" +
    "      registry-auth:\n" +
    "        help: \"List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]\"\n" +
    "        secure: true\n" +
    "        envar: \"REGISTRY_AUTH\"\n" +
-   "        cli-exported-to-actions: [\"maintain\"]\n" +
+   "        cli-exported-to-actions: [\"create\", \"update\", \"maintain\"]\n" +
    "      admin-pwd:\n" +
    "        help: \"To replace the default simple security admin password\"\n" +
    "        secure: true\n" +
@@ -340,8 +340,8 @@ const YamlDesc = "---\n" +
    "        default: \"{{ (index .Forjfile.Repos .Current.Name).Role }}\"\n" +
    "      repo-deploy-hosted:\n" +
    "        internal: true\n" +
-   "        help: True if the repository is managed in the current deployment context\n" +
-   "        default: \"{{ (index .Forjfile.Repos .Current.Name).IsCurrentDeploy }}\"\n" +
+   "        help: true if the repository is managed in the current deployment context\n" +
+   "        default: \"{{ if (index .Forjfile.Repos .Current.Name).IsDeployable }}true{{ end }}\"\n" +
    "    groups:\n" +
    "      github:\n" +
    "        flags:\n" +
