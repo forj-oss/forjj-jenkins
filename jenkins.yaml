@@ -108,7 +108,7 @@ objects:
         help: "List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]"
         secure: true
         envar: "REGISTRY_AUTH"
-        cli-exported-to-actions: ["maintain"]
+        cli-exported-to-actions: ["create", "update", "maintain"]
       admin-pwd:
         help: "To replace the default simple security admin password"
         secure: true
