@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "forjj-jenkins/reportlogs"
 	"os"
 	"path"
 
@@ -10,7 +10,7 @@ import (
 
 // Return ok if the jenkins instance exist
 func (r *MaintainReq) checkSourceExistence(ret *goforjj.PluginData) (status bool) {
-	log.Print("Checking Jenkins source code path existence.")
+	log.Printf("Checking Jenkins source code path existence.")
 
 	srcPath := path.Join(r.Forj.ForjjDeployMount, r.Forj.ForjjDeploymentEnv, r.Forj.ForjjInstanceName)
 	if _, err := os.Stat(path.Join(srcPath, maintain_cmds_file)); err != nil {
@@ -34,7 +34,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 
 	src := path.Join(mount, r.Forj.ForjjDeploymentEnv, instance)
 	if _, err := os.Stat(path.Join(src, maintain_cmds_file)); err != nil {
-		log.Printf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
+		log.Reportf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
 		return true
 	}
 	p := newPlugin("", mount)
@@ -53,83 +53,16 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	if !p.GetMaintainData(req, ret) {
 		return
 	}
-	ret.StatusAdd("Maintaining '%s'", p.InstanceName)
+	log.Reportf("Maintaining '%s'", p.InstanceName)
 	if err := os.Chdir(src); err != nil {
-		ret.Errorf("Unable to enter in '%s'. %s", src, err)
+		log.Errorf("Unable to enter in '%s'. %s", src, err)
 		return
 	}
-	if !p.instantiateInstance(instance, auths, ret) {
-		return
-	}
-	return true
-}
-
-func (p *JenkinsPlugin) instantiateInstance(instance string, auths *DockerAuths, ret *goforjj.PluginData) (status bool) {
 	// start a command as described by the source code.
-	if p.run.RunCommand == "" {
-		log.Printf(ret.Errorf("Unable to instantiate to %s. Deploy Command is empty.", p.yaml.Deploy.Deployment.To))
+	if err := p.run.run(instance, p.deployPath, p.Model(), auths) ; err != nil {
+		log.Errorf("Unable to instantiate to %s.", p.yaml.Deploy.Deployment.To, err)
 		return
-	}
-
-	for server := range auths.Auths {
-		if err := auths.authenticate(server); err != nil {
-			log.Printf(ret.Errorf("Unable to instantiate. %s", err))
-			return
-		}
-	}
-
-	log.Printf(ret.StatusAdd("Running '%s'", p.run.RunCommand))
-
-	env := os.Environ()
-	if v := os.Getenv("DOOD_SRC"); v != "" {
-		env = append(env, "SRC="+path.Join(v, instance)+"/")
-		log.Printf("DOOD_SRC detected. Env added : 'SRC' = '%s'", path.Join(v, instance)+"/")
-	}
-	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
-		deployPath := v
-		env = append(env, "DEPLOY="+deployPath)
-		log.Printf("DOOD_DEPLOY detected. Env added : 'DEPLOY' = '%s'", deployPath)
-	}
-
-	model := p.Model()
-	for key, env_to_set := range p.run.Env {
-		if env_to_set.If != "" {
-			// check if If evaluation return something or not. if not, the environment key won't be created.
-			if v, err := Evaluate(env_to_set.If, model); err != nil {
-				ret.Errorf("Deployment '%s'. Error in evaluating '%s'. %s", p.yaml.Deploy.Deployment.To, key, err)
-			} else {
-				if v == "" {
-					continue
-				}
-			}
-		}
-		if v, err := Evaluate(env_to_set.Value, model); err != nil {
-			ret.Errorf("Deployment '%s'. Error in evaluating '%s'. %s", p.yaml.Deploy.Deployment.To, key, err)
-		} else {
-			env = append(env, key+"="+v)
-			log.Printf("Env added : '%s' = '%s'", key, v)
-		}
-	}
-
-	if err := p.run.Files.createFiles(model, p.deployPath, ret); err != nil {
-		log.Printf(ret.Errorf("Deployment '%s'. %s", p.yaml.Deploy.Deployment.To, err))
-		return
-	}
-
-	err := runFlowCmd("/bin/sh", env,
-		func(line string) {
-			log.Printf(ret.StatusAdd(line))
-		},
-		func(line string) {
-			log.Printf(ret.StatusAdd(line))
-
-		}, "-c", p.run.RunCommand)
-
-	p.run.Files.deleteFiles()
-
-	if err != nil {
-		curDir, _ := os.Getwd()
-		log.Printf(ret.Errorf("%s (pwd: %s)", err, curDir))
 	}
 	return true
 }
+

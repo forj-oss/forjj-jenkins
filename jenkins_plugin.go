@@ -42,6 +42,7 @@ type JenkinsPlugin struct {
 	run               RunStruct
 	sources           map[string]TmplSource
 	templates         map[string]TmplSource
+	built             map[string]TmplSource
 }
 
 type DeployApp struct {
