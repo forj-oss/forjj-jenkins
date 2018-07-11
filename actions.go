@@ -2,8 +2,8 @@
 package main
 
 import (
-	"forjj-jenkins/reportlogs"
-	"log"
+	log "forjj-jenkins/reportlogs"
+	logRef "log"
 	"net/http"
 
 	"github.com/forj-oss/forjj-modules/trace"
@@ -21,15 +21,15 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 		return code
 	}
 
-	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			log.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Printf(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
-			log.Printf(ret.Errorf(format, parameters...))
+			gotrace.Error(ret.Errorf(format, parameters...))
 		},
 		"pluginLog": func(format string, parameters ...interface{}) {
-			log.Printf(format, parameters...)
+			logRef.Printf(format, parameters...)
 		},
 	})
 
@@ -43,11 +43,13 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if p.runBuildDeploy(req.Creds) != nil {
+	if err := p.runBuildDeploy(req.Creds) ; err != nil {
+		log.Errorf("%s", err)
 		return
 	}
 
-	if p.addBuiltFiles(ret, nil) != nil {
+	if err := p.addBuiltFiles(ret, nil) ; err != nil {
+		log.Errorf("%s", err)
 		return
 	}
 
@@ -77,15 +79,15 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 		return
 	}
 
-	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			log.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Printf(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
 			gotrace.Error(ret.Errorf(format, parameters...))
 		},
 		"pluginLog": func(format string, parameters ...interface{}) {
-			log.Printf(format, parameters...)
+			logRef.Printf(format, parameters...)
 		},
 	})
 
@@ -110,11 +112,13 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if p.runBuildDeploy(req.Creds) != nil {
+	if err := p.runBuildDeploy(req.Creds) ; err != nil {
+		log.Errorf("%s", err)
 		return
 	}
 
-	if p.addBuiltFiles(ret, &updated) != nil {
+	if err := p.addBuiltFiles(ret, &updated) ; err != nil {
+		log.Errorf("%s", err)
 		return
 	}
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, &updated) != nil {
@@ -130,7 +134,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	if updated {
 		ret.CommitMessage = "Updating jenkins source files requested by Forjfile."
 	} else {
-		log.Print(ret.StatusAdd("No update detected. Jenkins source files hasn't been updated."))
+		log.Reportf("No update detected. Jenkins source files hasn't been updated.")
 	}
 	return
 }
@@ -144,15 +148,15 @@ func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (htt
 		return
 	}
 
-	reportlogs.SetLogsFunc(map[string]func(string, ...interface{}){
+	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			log.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Printf(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
-			log.Printf(ret.Errorf(format, parameters...))
+			gotrace.Error(ret.Errorf(format, parameters...))
 		},
 		"pluginLog": func(format string, parameters ...interface{}) {
-			log.Printf(format, parameters...)
+			logRef.Printf(format, parameters...)
 		},
 	})
 
