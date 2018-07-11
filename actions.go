@@ -23,7 +23,7 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 
 	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			logRef.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Print(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
 			gotrace.Error(ret.Errorf(format, parameters...))
@@ -43,12 +43,12 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if err := p.runBuildDeploy(req.Creds) ; err != nil {
+	if err := p.runBuildDeploy(req.Creds); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
 
-	if err := p.addBuiltFiles(ret, nil) ; err != nil {
+	if err := p.addBuiltFiles(ret, nil); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
@@ -81,7 +81,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 
 	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			logRef.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Print(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
 			gotrace.Error(ret.Errorf(format, parameters...))
@@ -112,12 +112,12 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if err := p.runBuildDeploy(req.Creds) ; err != nil {
+	if err := p.runBuildDeploy(req.Creds); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
 
-	if err := p.addBuiltFiles(ret, &updated) ; err != nil {
+	if err := p.addBuiltFiles(ret, &updated); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
@@ -150,7 +150,7 @@ func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (htt
 
 	log.SetLogsFunc(map[string]func(string, ...interface{}){
 		"reportLog": func(format string, parameters ...interface{}) {
-			logRef.Printf(ret.StatusAdd(format, parameters...))
+			logRef.Print(ret.StatusAdd(format, parameters...))
 		},
 		"reportError": func(format string, parameters ...interface{}) {
 			gotrace.Error(ret.Errorf(format, parameters...))
