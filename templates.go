@@ -54,6 +54,7 @@ type TmplSource struct {
 	Template string
 	Tag      string // template string to use.
 	Source   string
+	Built    string
 	If       string `yaml:"if"` // If `If` is empty, the file will be ignored. otherwise the file will copied/generated
 	// as usual.
 }
@@ -157,6 +158,7 @@ func (p *JenkinsPlugin) DefineSources() error {
 	// Load all sources
 	p.sources = make(map[string]TmplSource)
 	p.templates = make(map[string]TmplSource)
+	p.built = make(map[string]TmplSource)
 
 	choose_file := func(file string, f TmplSource) error {
 		if file == "" {
@@ -172,12 +174,15 @@ func (p *JenkinsPlugin) DefineSources() error {
 				}
 			}
 		}
-		if f.Template == "" {
+		if f.Source != "" {
 			p.sources[file] = f
 			log.Printf("SRC : selected: %s", file)
-		} else {
+		} else if f.Template != "" {
 			p.templates[file] = f
 			log.Printf("TMPL: selected: %s", file)
+		} else if f.Built != "" {
+			p.built[file] = f
+			log.Printf("BUILT: selected: %s", file)
 		}
 		return nil
 	}

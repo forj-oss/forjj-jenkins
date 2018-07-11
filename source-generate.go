@@ -107,3 +107,23 @@ func (p *JenkinsPlugin) generate_source_files(ret *goforjj.PluginData, status *b
 
 	return
 }
+
+func (p *JenkinsPlugin) addBuiltFiles(ret *goforjj.PluginData, updated *bool) (err error) {
+	for file, desc := range p.built {
+		fileBuilt := path.Join(p.InstanceName, desc.Built)
+		if info, err := os.Stat(desc.Built); err == nil {
+			if info.IsDir() {
+				err = fmt.Errorf("%s is a directory. Cannot be added to controlled files by Forjj/git", fileBuilt)
+				log.Printf(ret.Errorf("%s", err))
+				return err
+			}
+			ret.AddFile(goforjj.FilesDeploy, fileBuilt)
+			log.Printf(ret.StatusAdd("Deploy: %s (%s) built by `run_build` process.", file, desc.Built))
+		} else {
+			log.Printf(ret.Errorf("%s has not been built by run_build command", fileBuilt))
+			return err
+
+		}
+	}
+	return nil
+}

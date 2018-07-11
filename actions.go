@@ -102,6 +102,9 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 		return
 	}
 
+	if p.addBuiltFiles(ret, &updated) != nil {
+		return
+	}
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, &updated) != nil {
 		return
 	}
