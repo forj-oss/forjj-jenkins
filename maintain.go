@@ -30,8 +30,6 @@ func (r *MaintainReq) checkSourceExistence(ret *goforjj.PluginData) (status bool
 func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ bool) {
 	instance := r.Forj.ForjjInstanceName
 	mount := r.Forj.ForjjDeployMount
-	auths := NewDockerAuths(r.Objects.App[instance].RegistryAuth)
-
 	src := path.Join(mount, r.Forj.ForjjDeploymentEnv, instance)
 	if _, err := os.Stat(path.Join(src, maintain_cmds_file)); err != nil {
 		log.Reportf("'%s' is not a forjj plugin source code model. No '%s' found. ignored.", src, jenkins_file)
@@ -39,6 +37,8 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	}
 	p := newPlugin("", mount)
 	p.setEnv(req.Forj.ForjjDeploymentEnv, req.Forj.ForjjInstanceName)
+
+	p.auths = NewDockerAuths(r.Objects.App[instance].RegistryAuth)
 
 	// Load deploy configuration
 	if !p.loadYaml(goforjj.FilesDeploy, jenkinsDeployFile, &p.yaml, ret, true) {
@@ -59,10 +59,9 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 		return
 	}
 	// start a command as described by the source code.
-	if err := p.run.run(instance, p.deployPath, p.Model(), auths) ; err != nil {
+	if err := p.run.run(instance, p.deployPath, p.Model(), p.auths); err != nil {
 		log.Errorf("Unable to instantiate to %s.", p.yaml.Deploy.Deployment.To, err)
 		return
 	}
 	return true
 }
-

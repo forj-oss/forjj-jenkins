@@ -41,6 +41,16 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 		return
 	}
 
+	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
+
+	if p.runBuildDeploy(req.Creds) != nil {
+		return
+	}
+
+	if p.addBuiltFiles(ret, nil) != nil {
+		return
+	}
+
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, nil) != nil {
 		return
 	}
@@ -98,7 +108,9 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 		return
 	}
 
-	if p.runBuildDeploy(req, &updated) != nil {
+	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
+
+	if p.runBuildDeploy(req.Creds) != nil {
 		return
 	}
 
