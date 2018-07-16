@@ -2,20 +2,44 @@
 #
 #
 
-IMAGE_NAME={{ .JenkinsImage.Name }}
+echo "==== Running $0 ===="
 
-if [ "$LOGNAME" = jenkins ]
+IMAGE_NAME={{ .JenkinsImage.Name }}
+REPO={{ .JenkinsImage.RegistryRepoName }}
+
+{{ if (eq .JenkinsImage.Version "") }}\
+OFFICIAL_VERSION=V0
+{{ else }}\
+OFFICIAL_VERSION={{ .JenkinsImage.Version }}
+{{ end }}\
+
+if [[ "$DEV_USER" = "" ]]
 then
-   REPO={{ .JenkinsImage.RegistryRepoName }}
-   IMAGE_VERSION={{ .JenkinsImage.Version }}
-else
-   REPO=$LOGNAME
-   IMAGE_VERSION=test
+    echo "Not used in Forjj context. Using $LOGNAME as DEV_USER"
+    DEV_USER=$LOGNAME
 fi
+
+{{ if (eq .Deploy.Type "DEV") }}\
+IMAGE_VERSION="$DEV_USER"-$OFFICIAL_VERSION
+{{ else }}\
+{{   if (eq .Deploy.Type "TEST") }}\
+IMAGE_VERSION=test-$OFFICIAL_VERSION
+{{   else }}\
+IMAGE_VERSION=$OFFICIAL_VERSION
+{{   end }}\
+{{ end }}\
 
 if [ -f build_opts.sh ]
 then
    source build_opts.sh
+fi
+
+if [[ "$DOCKER_REGISTRY_PWD" != "" ]]
+then
+    echo "Login to docker registry {{ .JenkinsImage.RegistryServer }}."
+    sudo docker login {{ .JenkinsImage.RegistryServer }} -u {{ index .AppExtent "docker-registry-username" }} --password "$DOCKER_REGISTRY_PWD"
+else
+    echo "DOCKER_REGISTRY_PWD not given. login ignored."
 fi
 
 TAG_NAME={{ .JenkinsImage.RegistryServer }}/$REPO/$IMAGE_NAME:$IMAGE_VERSION
@@ -43,14 +67,38 @@ then
    echo "Using current git branch 'master'. Add BRANCH= to change it."
 fi
 
-JENKINS_INSTALL_INITS_URL="https://github.com/$MYFORK/raw/$BRANCH/"
+JENKINS_INSTALL_INITS_URL="https://github.com/$MYFORK"
 FEATURES="--build-arg JENKINS_INSTALL_INITS_URL=$JENKINS_INSTALL_INITS_URL"
 
 # Added DOOD docker group
 BUILD_OPTS="$BUILD_OPTS --build-arg DOOD_DOCKER_GROUP=$(stat /var/run/docker.sock -c %g)"
 
+IMAGE_BASE={{ .Dockerfile.FromImage }}{{ if .Dockerfile.FromImageVersion }}:{{ .Dockerfile.FromImageVersion }}{{ end }}
+
+# if forjj is running in DDOD mode, forjj-jenkins can provides the SRC & DEPLOY
+# SRC (DOOD_SRC defined by forjj while running forjj-jenkins plugin) represents the real path on the host of the source code (infra)
+# DEPLOY (DOOD_DEPLOY defined by forjj) represents the real path on the host of the deployment source code (per deployment environment)
+#
+# This is required in case we use the docker -v to mount a 'local' volume (from where the docker daemon run).
+set +e
+sudo -n docker rm -f jplugins 2>/dev/null 1>/dev/null
+set -e
+
+# jplugins check, identify updates and fix version in jplugins.lock
+# If you need to downgrade a plugin version, update the templates.yaml and add your plugin with 'plugins:<myPlugin>:<Version to freeze>'
+# If you need to understand what jplugins do, you can enable the DEBUG mode with -e GOTRACE=true at docker command
+# ex: sudo -n docker exec -e GOTRACE=true jplugins /usr/local/bin/jplugins init --feature-file features.lst --features-repo-path /tmp/jenkins-install-inits
+
+
 set -x
-sudo -n docker pull {{ .Dockerfile.FromImage }}{{ if .Dockerfile.FromImageVersion }}:{{ .Dockerfile.FromImageVersion }}{{ end }}
+sudo -n docker pull $IMAGE_BASE
+sudo -n docker run -di --name jplugins $RUN_PROXY -v $DEPLOY:/src -w /src -u $(id -u):$(id -g) -e LOGNAME $IMAGE_BASE /bin/cat
+sudo -n docker exec -u 0 -i jplugins curl -L -o /usr/bin/docker-lu https://github.com/forj-oss/docker-lu/releases/download/0.1/docker-lu
+sudo -n docker exec -u 0 -i jplugins chmod +x /usr/bin/docker-lu
+sudo -n docker exec -u 0 -i jplugins docker-lu jenkins $(id -u) jenkins $(id -g)
+sudo -n docker exec jplugins git clone https://github.com/forj-oss/jenkins-install-inits /tmp/jenkins-install-inits
+sudo -n docker exec jplugins /usr/local/bin/jplugins init --feature-file features.lst --features-repo-path /tmp/jenkins-install-inits
+sudo -n docker rm -f jplugins
 sudo -n docker build -t $TAG_NAME $FEATURES $PROXY $BUILD_OPTS .
 set +x
 
