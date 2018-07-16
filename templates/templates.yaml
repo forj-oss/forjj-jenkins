@@ -6,13 +6,22 @@ features:
   - "feature:proxy"
   - "{{ if .Source.Projects.DslDefault }}feature:seed-job{{ end }}"
   - "feature:basic-security"
+  - "{{ if and (.Source.ProjectsHasSource \"github\") (eq (index .Source.AppExtent \"github-auth\") \"true\") }}feature:github-authentication{{ end }}"
+  - "{{ if and (.Source.ProjectsHasSource \"github\") (eq (index .Source.AppExtent \"github-auth\") \"true\") }}feature:github-authorization{{ end }}"
   - "feature:tcp-slave-agent-port"
   - "feature:jenkins-pipeline"
-  - "plugin:git:3.4.1"
   - "plugin:managed-scripts"
+  - "plugin:embeddable-build-status"
+  - "feature:credentials"
+  - "feature:csrf"
   - "plugin:config-file-provider"
   - "{{ if .Source.ProjectsHasSource \"github\" }}feature:multibranch-github-pipeline{{ end }}"
   - "{{ if .Source.ProjectsHasSource \"bitbucket\" }}plugin:cloudbees-bitbucket-branch-source:2.2.2{{ end }}"
+  - plugin:timestamper
+  - plugin:mask-passwords
+  - plugin:blueocean
+  - plugin:blueocean-github-pipeline
+  - plugin:ws-cleanup
   deploy:
     docker:
     - "feature:yet-another-docker-plugin"
@@ -26,46 +35,30 @@ features:
     - "feature:executor"
 sources:
   common:
-    docker file:
-      template: "Dockerfile"
-    build script:
-      template: "bin/build.sh"
-      chmod   : 0755
-    git ignore:
-      template: ".gitignore"
-    build options sample:
-      source  : "build_opts.sh.sample"
-    jenkins features:
-      template: "features.lst"
-    Jenkinsfile:
-      source  : Jenkinsfile
-    jenkins credentials:
-      source  : "jenkins_credentials.sh.sample"
-    ssl certificate:
-      template: "certificate.crt"
-      if: "{{ if (and .Source.Deploy.Ssl.Certificate (eq .Source.Deploy.Ssl.Method \"manual\")) }}true{{ end }}"
+    docker file:            { template: "Dockerfile"                                                                                                                  }
+    build script:           { template: "bin/build.sh", chmod : 0755                                                                                                  }
+    git ignore:             { template: ".gitignore"                                                                                                                  }
+    build options sample:   { source  : "build_opts.sh.sample"                                                                                                        }
+    jenkins features:       { template: "features.lst"                                                                                                                }
+    Jenkinsfile:            { source  : Jenkinsfile                                                                                                                   }
+    jenkins credentials:    { source  : "jenkins_credentials.sh.sample"                                                                                               }
+    ssl certificate:        { template: "certificate.crt", if: "{{ if (and .Source.Deploy.Ssl.Certificate (eq .Source.Deploy.Ssl.Method \"manual\")) }}true{{ end }}" }
+    pre-installed-plugins:  { source  : jplugins-preinstalled.lst                                                                                                     }
   deploy:
     docker:
-      start up script:
-        template: "bin/start.sh"
-        chmod   : 0755
-      start up options sample:
-        source  : "run_opts.sh.sample"
-      dood install script:
-        source : install_dood.sh
-        chmod: 0755
-    ucp:
-      Makefile:
-        source  : "Makefile"
-    mesos:
-      marathon json payload:
-        template: "bin/marathon.json"
-    dcos:
-      marathon json payload:
-        template: "bin/marathon.json"
+      start up script:         { template: "bin/start.sh",        chmod: 0755 }
+      start up options sample: { source  : "run_opts.sh.sample"               }
+      dood install script:     { source : install_dood.sh,        chmod: 0755 }
+run_build:
+  docker:
+    run: "bin/build.sh"
+    environment:
+      DOCKER_REGISTRY_PWD:
+        value: "{{ index .Creds \"app-jenkins-docker-registry-pwd\" }}"
+
 run_deploy:
   docker:
-    run: "bin/build.sh && bin/start.sh"
+    run: "bin/start.sh"
     environment:
       CERTIFICATE_KEY:
         value: "{{ .Creds.SslPrivateKey }}"
@@ -75,15 +68,3 @@ run_deploy:
         if: "{{ .Creds.AdminPwd }}"
       GITHUB_USER_PASS:
         value: "{{ .Creds.GithubUserPassword }}"
-  ucp:
-    run: "make deploy" # not tested
-  mesos:
-    run: "curl -X POST -d @bin/marathon.json {{ .Source.Mesos.MarathonUrl }}/..." # Not tested
-  dcos:
-    run: "curl -X POST -d @bin/marathon.json {{ .Source.Mesos.MarathonUrl }}/... -H 'token: {{ .Source.Mesos.Token }}" # Not tested
-# If the end user define a variant not listed in the following, the instance information will be kept in the workspace instead of forjj-jenkins.yaml source file
-# Following variants will be stored in the infra repository and considered as 'public permanent managed resource'
-# A local variant, is typically a local docker instance which will never be kept in source code as spawned on the Dev workstation.
-variants:
-  pro: # Production instance variant, used to store and manage those servers list in the repository.
-  itg: # Testing instance variant, used to store and manage those servers list in the repository. Usually, used for performance/UAT/final functional testing
