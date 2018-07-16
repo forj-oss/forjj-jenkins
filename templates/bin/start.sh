@@ -1,10 +1,32 @@
-#!/bin/sh
+#!/bin/bash -x
 #
 #
 
 REPO=$LOGNAME
 IMAGE_NAME="{{ .JenkinsImage.Name }}"
-IMAGE_VERSION=test
+REPO={{ .JenkinsImage.RegistryRepoName }}
+
+{{ if (eq .JenkinsImage.Version "") }}\
+OFFICIAL_VERSION=V0
+{{ else }}\
+OFFICIAL_VERSION={{ .JenkinsImage.Version }}
+{{ end }}\
+
+if [[ "$DEV_USER" = "" ]]
+then
+    echo "Not used in Forjj context. Using $LOGNAME as DEV_USER"
+    DEV_USER=$LOGNAME
+fi
+
+{{ if (eq .Deploy.Type "DEV") }}\
+IMAGE_VERSION="$DEV_USER"-$OFFICIAL_VERSION
+{{ else }}\
+{{   if (eq .Deploy.Type "TEST") }}\
+IMAGE_VERSION=test-$OFFICIAL_VERSION
+{{   else }}\
+IMAGE_VERSION=$OFFICIAL_VERSION
+{{   end }}\
+{{ end }}\
 
 
 # For Docker Out Of Docker case, a docker run may provides the SRC to use in place of $(pwd)
@@ -51,7 +73,7 @@ then
    echo "SERVICE_PORT not defined by any deployment environment. Set to '$SERVICE_PORT'"
 fi
 
-TAG_NAME={{ .JenkinsImage.RegistryServer }}/$LOGNAME/$IMAGE_NAME:$IMAGE_VERSION
+TAG_NAME={{ .JenkinsImage.RegistryServer }}/$REPO/$IMAGE_NAME:$IMAGE_VERSION
 
 {{/* Docker uses go template for --format. So need to generate a template go string */}}\
 CONTAINER_IMG="$(sudo docker ps -a -f name={{ .JenkinsImage.Name }}-dood --format "{{ "{{ .Image }}" }}")"
@@ -60,14 +82,14 @@ IMAGE_ID="$(sudo docker images --format "{{ "{{ .ID }}" }}" $IMAGE_NAME)"
 
 if [[ "$ADMIN_PWD" != "" ]]
 then
-   ADMIN="-e SIMPLE_ADMIN_PWD=$ADMIN_PWD"
+   ADMIN="-e SIMPLE_ADMIN_PWD=\"$ADMIN_PWD\""
    unset ADMIN_PWD
    echo "Admin password set."
 fi
 
 if [[ "$GITHUB_USER_PASS" != "" ]]
 then
-   GITHUB_USER="-e GITHUB_PASS=$GITHUB_USER_PASS"
+   GITHUB_USER="-e GITHUB_PASS=\"$GITHUB_USER_PASS\""
    unset GITHUB_USER_PASS
    echo "Github user password set."
 fi
@@ -127,6 +149,6 @@ if [ $? -ne 0 ]
 then
     echo "Issue about jenkins startup."
     sudo docker logs {{ .JenkinsImage.Name }}-dood
-    return 1
+    exit 1
 fi
 echo "Jenkins has been started and should be accessible at http{{ if .Deploy.Ssl.Certificate }}s{{ end }}://$SERVICE_ADDR:$SERVICE_PORT"
