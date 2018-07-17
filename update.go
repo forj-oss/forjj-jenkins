@@ -77,7 +77,7 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra)
 }
 
-func (jp *JenkinsPlugin) runBuildDeploy(creds map[string]string) (err error) {
+func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string) (err error) {
 	run, found := jp.templates_def.Build[jp.yaml.Deploy.Deployment.To]
 	if !found {
 		log.Printf("No run_build section defined for deploy-to=%s. No build processed. If you need one, create run_build/%s: in templates.yaml", jp.deployEnv, jp.deployEnv)
@@ -85,7 +85,7 @@ func (jp *JenkinsPlugin) runBuildDeploy(creds map[string]string) (err error) {
 	}
 
 	model := jp.Model()
-	model.loadCreds(jp.InstanceName, creds)
+	model.loadCreds(username, jp.InstanceName, creds)
 
 	if err = run.run(jp.InstanceName, jp.deployPath, model, jp.auths); err != nil {
 		log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)

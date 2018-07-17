@@ -130,9 +130,7 @@ func (p *JenkinsPlugin) GetMaintainData(req *MaintainReq, ret *goforjj.PluginDat
 			model.Env = make(map[string]string)
 		}
 
-		model.loadCreds(p.InstanceName, req.Creds)
-
-		model.Env["Username"] = req.Forj.ForjjUsername
+		model.loadCreds(req.Forj.ForjjUsername, p.InstanceName, req.Creds)
 	}
 	return true
 }
