@@ -125,6 +125,7 @@ type ForjCommonStruct struct {
 	ForjjInstanceName string `json:"forjj-instance-name"`
 	ForjjOrganization string `json:"forjj-organization"`
 	ForjjSourceMount string `json:"forjj-source-mount"`
+	ForjjUsername string `json:"forjj-username"`
 }
 
 type CreateReq struct {
@@ -222,6 +223,8 @@ const YamlDesc = "---\n" +
    "      help: \"To activate jenkins debug information\"\n" +
    "    forjj-source-mount:\n" +
    "      help: \"Where the source dir is located for jenkins plugin.\"\n" +
+   "    forjj-username:\n" +
+   "      help: \"User name running forjj\"\n" +
    "  maintain:\n" +
    "    deploy-to:\n" +
    "      default: docker\n" +

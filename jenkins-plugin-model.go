@@ -21,7 +21,7 @@ func (p *JenkinsPlugin) Model() (model *JenkinsPluginModel) {
 	return JP_Model
 }
 
-func (jpm *JenkinsPluginModel) loadCreds(instanceName string, creds map[string]string) {
+func (jpm *JenkinsPluginModel) loadCreds(userName, instanceName string, creds map[string]string) {
 	if jpm == nil || jpm.Creds == nil {
 		return
 	}
@@ -44,4 +44,6 @@ func (jpm *JenkinsPluginModel) loadCreds(instanceName string, creds map[string]s
 	for credName, credValue := range creds {
 		jpm.Creds[credName] = credValue
 	}
+
+	jpm.Env["Username"] = userName
 }

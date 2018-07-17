@@ -25,6 +25,8 @@ task_flags:
       help: "To activate jenkins debug information"
     forjj-source-mount:
       help: "Where the source dir is located for jenkins plugin."
+    forjj-username:
+      help: "User name running forjj"
   maintain:
     deploy-to:
       default: docker
