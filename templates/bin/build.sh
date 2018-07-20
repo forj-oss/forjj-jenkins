@@ -95,7 +95,7 @@ set -e
 
 set -x
 sudo -n docker pull $IMAGE_BASE
-sudo -n docker run -di --name jplugins $RUN_PROXY -v $DEPLOY:/src -w /src -u $(id -u):$(id -g) -e LOGNAME $IMAGE_BASE /bin/cat
+sudo -n -E docker run -di --name jplugins $RUN_PROXY -v $DEPLOY:/src -w /src -u $(id -u):$(id -g) -e LOGNAME $IMAGE_BASE /bin/cat
 sudo -n docker exec -u 0 -i jplugins curl -L -o /usr/bin/docker-lu https://github.com/forj-oss/docker-lu/releases/download/0.1/docker-lu
 sudo -n docker exec -u 0 -i jplugins chmod +x /usr/bin/docker-lu
 sudo -n docker exec -u 0 -i jplugins docker-lu jenkins $(id -u) jenkins $(id -g)
