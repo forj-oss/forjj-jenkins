@@ -47,12 +47,15 @@ TAG_NAME={{ .JenkinsImage.RegistryServer }}/$REPO/$IMAGE_NAME:$IMAGE_VERSION
 if [ "$http_proxy" != "" ]
 then
    PROXY=" --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy --build-arg no_proxy=$no_proxy"
+   RUN_PROXY=" -e http_proxy -e https_proxy"
    echo "Using your local proxy setting : $http_proxy"
    if [ "$no_proxy" != "" ]
    then
       PROXY="$PROXY --build-arg no_proxy=$no_proxy"
+      RUN_PROXY="$RUN_PROXY -e no_proxy"
       echo "no_proxy : $no_proxy"
    fi
+   export no_proxy http_proxy https_proxy
 fi
 
 if [ -z "$MYFORK" ]
