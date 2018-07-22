@@ -60,7 +60,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	}
 	// start a command as described by the source code.
 	if err := p.run.run(instance, p.deployPath, p.Model(), p.auths); err != nil {
-		log.Errorf("Unable to instantiate to %s.", p.yaml.Deploy.Deployment.To, err)
+		log.Errorf("Unable to instantiate to %s. %s", p.yaml.Deploy.Deployment.To, err)
 		return
 	}
 	return true
