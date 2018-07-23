@@ -18,7 +18,7 @@ type RunStruct struct {
 // Use reportLog or Errorf to report to the end users.
 // But errors detected is not interrupting the program immediatelly in order to report all issues to
 // fix
-func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, auths *DockerAuths) (err error) {
+func (r RunStruct) run(instance, sourcePath, deployPath string, model *JenkinsPluginModel, auths *DockerAuths) (err error) {
 	// start a command as described by the source code.
 
 	// Errors detected if true.
@@ -34,52 +34,7 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 		}
 	}
 
-	env := os.Environ()
-	if v := os.Getenv("DOOD_SRC"); v != "" {
-		log.Printf("DOOD detected.")
-		srcPath := path.Join(v, instance) + "/"
-		env = append(env, "SRC="+srcPath)
-		log.Printf("Env added : 'SRC' = '%s'", srcPath)
-	} else {
-		env = append(env, "SRC=/deploy/")
-	}
-
-	if v := os.Getenv("DOOD_DEPLOY"); v != "" {
-		deployPath := path.Join(v, instance) + "/"
-		env = append(env, "DEPLOY="+deployPath)
-		log.Printf("Env added : 'DEPLOY' = '%s'", deployPath)
-	} else {
-		env = append(env, "DEPLOY="+deployPath)
-		log.Printf("Env added : 'DEPLOY' = '%s'", deployPath)
-	}
-	if v := os.Getenv("DOCKER_DOOD"); v != "" {
-		env = append(env, "DOCKER_DOOD="+v)
-		log.Printf("Env added : 'DOCKER_DOOD' = '%s'", v)
-	}
-
-	if v := os.Getenv("DOCKER_DOOD_BECOME"); v != "" {
-		env = append(env, "DOCKER_DOOD_BECOME="+v)
-		log.Printf("Env added : 'DOCKER_DOOD_BECOME' = '%s'", v)
-	}
-
-	for key, envToSet := range r.Env {
-		if envToSet.If != "" {
-			// check if If evaluation return something or not. if not, the environment key won't be created.
-			if v, err := Evaluate(envToSet.If, model); err != nil {
-				log.Errorf("Error in evaluating '%s'. %s", key, err)
-			} else {
-				if v == "" {
-					continue
-				}
-			}
-		}
-		if v, err := Evaluate(envToSet.Value, model); err != nil {
-			log.Errorf("Error in evaluating '%s'. %s", key, err)
-		} else {
-			env = append(env, key+"="+v)
-			log.Printf("Env added : '%s' = '%s'", key, v)
-		}
-	}
+	env := r.defineEnv(instance, sourcePath, deployPath, model)
 
 	if err = r.Files.createFiles(model, deployPath); err != nil {
 		return
@@ -106,5 +61,123 @@ func (r RunStruct) run(instance, deployPath string, model *JenkinsPluginModel, a
 
 	r.Files.deleteFiles()
 
+	return
+}
+
+type envMapFunc struct {
+	key  string
+	more func(par, value string) (string, []string, bool)
+}
+
+type envMapFuncs []envMapFunc
+
+func (r RunStruct) setEnv(parameters envMapFuncs) (env []string) {
+	env = []string{}
+	for _, envFunc := range parameters {
+		v := os.Getenv(envFunc.key)
+		value, envToAdd, ignore := envFunc.more(envFunc.key, v)
+		if envToAdd != nil {
+			env = append(env, envToAdd...)
+			for _, theEnv := range envToAdd {
+				log.Printf("Env added : '%s'", theEnv)
+			}
+		}
+		if ignore || (v == "" && value == "") {
+			continue
+		}
+		if value != "" {
+			v = value
+		}
+		env = append(env, envFunc.key+"="+v)
+		log.Printf("Env added : '%s' = '%s'", envFunc.key, v)
+	}
+	return
+}
+
+func (r RunStruct) noEnvFunc(_, _ string) (_ string, _ []string, _ bool) {
+	return
+}
+
+func (r RunStruct) defineEnv(instance, sourcePath, deployPath string, model *JenkinsPluginModel) (env []string) {
+	dood := false
+	doodBecome := false
+
+	env = r.setEnv([]envMapFunc{
+		envMapFunc{"DOCKER_DOOD", func(par, value string) (ret string, _ []string, ignore bool) {
+			if value != "" {
+				log.Printf("DOOD detected.")
+				dood = true
+				return
+			}
+			ignore = true
+			return
+		},
+		},
+		envMapFunc{"DOOD_SRC", func(par, value string) (ret string, env []string, ignore bool) {
+			if value == "" || !dood {
+				env = []string{"SRC=" + sourcePath}
+				ignore = !dood
+				return
+			}
+			ret = path.Join(value, instance) + "/"
+			env = []string{"SRC=" + ret}
+			return
+		},
+		},
+		envMapFunc{"DOOD_DEPLOY", func(par, value string) (ret string, env []string, ignore bool) {
+			if value == "" || !dood {
+				env = []string{"DEPLOY=" + deployPath}
+				ignore = !dood
+				return
+			}
+			ret = path.Join(value, instance) + "/"
+			env = []string{"DEPLOY=" + ret}
+			return
+		},
+		},
+		envMapFunc{"DOCKER_DOOD_BECOME", func(par, value string) (ret string, _ []string, ignore bool) {
+			if value != "" {
+				log.Printf("DOOD_BECOME detected.")
+				doodBecome = true
+				return
+			}
+			ignore = true
+			return
+		},
+		},
+		envMapFunc{"GID", func(par, value string) (ret string, _ []string, ignore bool) {
+			ignore = !doodBecome
+			return
+		},
+		},
+		envMapFunc{"UID", func(par, value string) (ret string, _ []string, ignore bool) {
+			ignore = !doodBecome
+			return
+		},
+		},
+		envMapFunc{"LOGNAME", r.noEnvFunc},
+		envMapFunc{"PATH", r.noEnvFunc},
+		envMapFunc{"TERM", r.noEnvFunc},
+		envMapFunc{"HOSTNAME", r.noEnvFunc},
+	})
+
+	for key, envToSet := range r.Env {
+		if envToSet.If != "" {
+			// check if If evaluation return something or not. if not, the environment key won't be created.
+			if v, err := Evaluate(envToSet.If, model); err != nil {
+				log.Errorf("Error in evaluating '%s'. %s", key, err)
+			} else {
+				if v == "" {
+					continue
+				}
+			}
+		}
+		if v, err := Evaluate(envToSet.Value, model); err != nil {
+			log.Errorf("Error in evaluating '%s'. %s", key, err)
+		} else {
+			env = append(env, key+"="+v)
+			log.Printf("Env added : '%s' = '%s'", key, v)
+		}
+	}
 	return
 }

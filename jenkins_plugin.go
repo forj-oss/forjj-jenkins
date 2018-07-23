@@ -23,7 +23,7 @@ var JPS_Model *JenkinsPluginSourceModel
 type JenkinsPlugin struct {
 	yaml              YamlJenkins       // jenkins.yaml deploy file.
 	yamlPlugin        YamlJenkinsPlugin // jenkins.yaml source file
-	source_path       string            // Source Path
+	source_path       string            // Source Path (sourceMountPath + InstanceName)
 	deploysParentPath string            // Deployment repository path
 	deployPath        string            // Deployment Path (deployRepoPath + deployEnv + InstanceName)
 	deployEnv         string            // Deployment environment where files have to be generated.
