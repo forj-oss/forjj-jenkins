@@ -87,7 +87,7 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 	model := jp.Model()
 	model.loadCreds(username, jp.InstanceName, creds)
 
-	if err = run.run(jp.InstanceName, jp.deployPath, model, jp.auths); err != nil {
+	if err = run.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
 		log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)
 		return
 	}
