@@ -159,6 +159,12 @@ func (r RunStruct) defineEnv(instance, sourcePath, deployPath string, model *Jen
 		envMapFunc{"PATH", r.noEnvFunc},
 		envMapFunc{"TERM", r.noEnvFunc},
 		envMapFunc{"HOSTNAME", r.noEnvFunc},
+		envMapFunc{"http_proxy", r.noEnvFunc},
+		envMapFunc{"https_proxy", r.noEnvFunc},
+		envMapFunc{"no_proxy", r.noEnvFunc},
+		envMapFunc{"HTTP_PROXY", r.noEnvFunc},
+		envMapFunc{"HTTPS_PROXY", r.noEnvFunc},
+		envMapFunc{"NO_PROPXY", r.noEnvFunc},
 	})
 
 	for key, envToSet := range r.Env {
