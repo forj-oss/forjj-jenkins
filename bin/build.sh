@@ -19,16 +19,8 @@ fi
 
 create-go-build-env.sh
 
-if [ "$GOPATH" = "" ]
-then
-    echo "Unable to build without GOPATH. Please set it (build)env or your local personal '.be-gopath')"
-    exit 1
-fi
-
 glide i
 
-# Requires forjj to be static.
-export CGO_ENABLED=0
 go build
 
 set -x
