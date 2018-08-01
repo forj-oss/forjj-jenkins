@@ -2,12 +2,22 @@ pipeline {
     agent any
 
     stages {
+        stage('prepare build environment') {
+            steps {
+                sh('''set +x ; source ./build-env.sh
+                create-go-build-env.sh''')
+            }
+        }
+        stage('Install dependencies') {
+            steps {
+                sh('''set +x ; source ./build-env.sh
+                glide i''')
+            }
+        }
         stage('Build') {
             steps {
-                withEnv(["DOCKER_JENKINS_HOME=${env.DOCKER_JENKINS_MOUNT}"]) {
-                    sh('''set +x ; source ./build-env.sh
-                    build.sh''')
-                }
+                sh('''set +x ; source ./build-env.sh
+                go build''')
             }
         }
         stage('Tests') {
