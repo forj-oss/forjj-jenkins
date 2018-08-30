@@ -49,6 +49,7 @@ type SslStruct struct {
 
 type AppInstanceStruct struct {
 	AdminPwd string `json:"admin-pwd"` // To replace the default simple security admin password
+	JenkinsfilePath string `json:"jenkinsfile-path"` // Define Default Jenkinsfile PATH used by JobDSL to generate all code project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'.
 	ProDeployment string `json:"pro-deployment"` // true if current deployment is production one
 	RegistryAuth string `json:"registry-auth"` // List of Docker registry servers authentication separated by coma. One registry server auth string is build as <server>:<token>[:<email>]
 	SourceTemplates string `json:"source-templates"` // Path to local source template to build Jenkins deployment. Usually, 'templates/<myTemplates>'. If not set, it uses internal forjj template.
@@ -97,6 +98,7 @@ type GithubStruct struct {
 // Object Instance structures
 
 type ProjectsInstanceStruct struct {
+	JenkinsfilePath string `json:"jenkinsfile-path"` // Define Jenkinsfile PATH used by JobDSL to generate the project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'.
 	Name string `json:"name"` // Project name
 	RemoteType string `json:"remote-type"` // Define remote source  type. 'github' is used by default. Support 'git', 'github'.
 	RepoDeployHosted string `json:"repo-deploy-hosted"` // true if the repository is managed in the current deployment context
@@ -318,6 +320,8 @@ const YamlDesc = "---\n" +
    "      pro-deployment:\n" +
    "        help: true if current deployment is production one\n" +
    "        default: \"{{ if (eq (.Deployments.Get .Current.Deployment).Type \\\"PRO\\\") }}true{{ else }}false{{ end }}\"\n" +
+   "      jenkinsfile-path:\n" +
+   "        help: \"Define Default Jenkinsfile PATH used by JobDSL to generate all code project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'.\"\n" +
    "  features:\n" +
    "    default-actions: [\"add\", \"change\", \"remove\"]\n" +
    "    identified_by_flag: name\n" +
@@ -345,6 +349,8 @@ const YamlDesc = "---\n" +
    "        internal: true\n" +
    "        help: true if the repository is managed in the current deployment context\n" +
    "        default: \"{{ if (index .Forjfile.Repos .Current.Name).IsDeployable }}true{{ end }}\"\n" +
+   "      jenkinsfile-path:\n" +
+   "        help: \"Define Jenkinsfile PATH used by JobDSL to generate the project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'.\"\n" +
    "    groups:\n" +
    "      github:\n" +
    "        flags:\n" +

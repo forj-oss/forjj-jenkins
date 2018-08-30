@@ -1,15 +1,15 @@
 package main
 
 type Project struct {
-	Name       string
-	SourceType string
-	Github     GithubStruct `yaml:",omitempty"`
-	Git        GitStruct    `yaml:",omitempty"`
-	InfraRepo  bool         `yaml:",omitempty"`
-	RepoRole   string       `yaml:"role",omitempty`
-	all        *Projects
+	Name            string
+	SourceType      string
+	Github          GithubStruct `yaml:",omitempty"`
+	Git             GitStruct    `yaml:",omitempty"`
+	InfraRepo       bool         `yaml:",omitempty"`
+	RepoRole        string       `yaml:"role,omitempty"`
+	JenkinsfilePath string       `yaml:"jenkinsfile-path,omitempty"`
+	all             *Projects
 }
-
 
 func (p *Project) Remove() bool {
 	return true

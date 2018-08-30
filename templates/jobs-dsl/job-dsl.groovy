@@ -21,6 +21,13 @@ multibranchPipelineJob('{{ .Project.Name }}') {
       }
 {{ end }}\
   }
+{{ if and (eq .Project.Role "code") (not (eq .Project.JenkinsfilePath "")) }}\
+  configure {
+      it / factory {
+          scriptPath('{{ .Project.JenkinsfilePath }}')
+    }
+  }
+{{ end }}
   orphanedItemStrategy {
       discardOldItems {
           numToKeep(20)
