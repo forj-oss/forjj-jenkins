@@ -59,13 +59,17 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 
 	// Retrieve list of Repository (projects) to manage
 	for name, prj := range projects {
-		jenkinsfilePath := defaultJenkinsfilePath
+		jenkinsfilePath := ""
 		if prj.RepoDeployHosted != "true" {
 			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
 			continue
 		}
-		if prj.JenkinsfilePath != "" && prj.RepoRole == "code" {
-			jenkinsfilePath = prj.JenkinsfilePath
+		if prj.RepoRole == "code" { // Do not change Jenkinsfile Path setup for internal Forjj repository.
+			if prj.JenkinsfilePath != "" {
+				jenkinsfilePath = prj.JenkinsfilePath
+			} else {
+				jenkinsfilePath = defaultJenkinsfilePath
+			}
 		}
 		switch prj.RemoteType {
 		case "github":
