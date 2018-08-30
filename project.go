@@ -6,7 +6,7 @@ type Project struct {
 	Github          GithubStruct `yaml:",omitempty"`
 	Git             GitStruct    `yaml:",omitempty"`
 	InfraRepo       bool         `yaml:",omitempty"`
-	RepoRole        string       `yaml:"role,omitempty"`
+	Role            string       `yaml:"role,omitempty"`
 	JenkinsfilePath string       `yaml:"jenkinsfile-path,omitempty"`
 	all             *Projects
 }
