@@ -64,7 +64,7 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
 			continue
 		}
-		if prj.JenkinsfilePath != "" {
+		if prj.JenkinsfilePath != "" && prj.RepoRole == "code" {
 			jenkinsfilePath = prj.JenkinsfilePath
 		}
 		switch prj.RemoteType {
