@@ -28,17 +28,17 @@ func NewProjects(InstanceName, repo, Dslpath string, dslDefault bool) *Projects 
 	return p
 }
 
-func (p *Projects) AddGithub(name string, d *GithubStruct) bool {
+func (p *Projects) AddGithub(name string, d *GithubStruct, repoRole string) bool {
 	data := new(GithubStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p}
+	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p, RepoRole: repoRole}
 	return true
 }
 
-func (p *Projects) AddGit(name string, d *GitStruct) bool {
+func (p *Projects) AddGit(name string, d *GitStruct, repoRole string) bool {
 	data := new(GitStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p}
+	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p, RepoRole: repoRole}
 	return true
 }
 

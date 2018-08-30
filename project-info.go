@@ -65,9 +65,9 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 		}
 		switch prj.RemoteType {
 		case "github":
-			r.yaml.Projects.AddGithub(name, &prj.GithubStruct)
+			r.yaml.Projects.AddGithub(name, &prj.GithubStruct, prj.RepoRole)
 		case "git":
-			r.yaml.Projects.AddGit(name, &prj.GitStruct)
+			r.yaml.Projects.AddGit(name, &prj.GitStruct, prj.RepoRole)
 		}
 	}
 	IsUpdated(status)
