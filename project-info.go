@@ -65,11 +65,10 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 			continue
 		}
 		if prj.RepoRole == "code" { // Do not change Jenkinsfile Path setup for internal Forjj repository.
-			if prj.JenkinsfilePath != "" {
-				jenkinsfilePath = prj.JenkinsfilePath
-			} else {
-				jenkinsfilePath = defaultJenkinsfilePath
-			}
+			jenkinsfilePath = defaultJenkinsfilePath
+		}
+		if prj.JenkinsfilePath != "" { // But permit to change all repository one by one if needed, even on Forjj repository.
+			jenkinsfilePath = prj.JenkinsfilePath
 		}
 		switch prj.RemoteType {
 		case "github":
