@@ -33,7 +33,7 @@ func NewProjects(InstanceName, repo, Dslpath string, dslDefault bool) *Projects 
 func (p *Projects) AddGithub(name string, d *GithubStruct, repoRole, jenkinsfilePath string) bool {
 	data := new(GithubStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p, RepoRole: repoRole}
+	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p, Role: repoRole, JenkinsfilePath: jenkinsfilePath}
 	return true
 }
 
@@ -41,7 +41,7 @@ func (p *Projects) AddGithub(name string, d *GithubStruct, repoRole, jenkinsfile
 func (p *Projects) AddGit(name string, d *GitStruct, repoRole, jenkinsfilePath string) bool {
 	data := new(GitStruct)
 	data.SetFrom(d)
-	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p, RepoRole: repoRole}
+	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p, Role: repoRole, JenkinsfilePath: jenkinsfilePath}
 	return true
 }
 
