@@ -36,7 +36,7 @@ func (pi *ProjectInfo) setIsProDeploy(isProDeployment bool) {
 }
 
 func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruct, r *JenkinsPlugin,
-	ret *goforjj.PluginData, status *bool, InfraName string) (_ error) {
+	ret *goforjj.PluginData, status *bool, InfraName, defaultJenkinsfilePath string) (_ error) {
 	if pi.ForjjInfraUpstream == "" {
 		ret.StatusAdd("Unable to add a new project without a remote GIT repository. Jenkins JobDSL requirement. " +
 			"To enable this feature, add a remote GIT to your infra --infra-upstream or define the JobDSL Repository to clone.")
@@ -59,15 +59,19 @@ func (pi *ProjectInfo) set_projects_to(projects map[string]ProjectsInstanceStruc
 
 	// Retrieve list of Repository (projects) to manage
 	for name, prj := range projects {
+		jenkinsfilePath := defaultJenkinsfilePath
 		if prj.RepoDeployHosted != "true" {
 			gotrace.Trace("Project %s ignored, because not deploying in production an '%s' repo role.", name, prj.RepoRole)
 			continue
 		}
+		if prj.JenkinsfilePath != "" {
+			jenkinsfilePath = prj.JenkinsfilePath
+		}
 		switch prj.RemoteType {
 		case "github":
-			r.yaml.Projects.AddGithub(name, &prj.GithubStruct, prj.RepoRole)
+			r.yaml.Projects.AddGithub(name, &prj.GithubStruct, prj.RepoRole, jenkinsfilePath)
 		case "git":
-			r.yaml.Projects.AddGit(name, &prj.GitStruct, prj.RepoRole)
+			r.yaml.Projects.AddGit(name, &prj.GitStruct, prj.RepoRole, jenkinsfilePath)
 		}
 	}
 	IsUpdated(status)

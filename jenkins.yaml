@@ -120,6 +120,8 @@ objects:
       pro-deployment:
         help: true if current deployment is production one
         default: "{{ if (eq (.Deployments.Get .Current.Deployment).Type \"PRO\") }}true{{ else }}false{{ end }}"
+      jenkinsfile-path:
+        help: "Define Default Jenkinsfile PATH used by JobDSL to generate all code project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'."
   features:
     default-actions: ["add", "change", "remove"]
     identified_by_flag: name
@@ -147,6 +149,8 @@ objects:
         internal: true
         help: true if the repository is managed in the current deployment context
         default: "{{ if (index .Forjfile.Repos .Current.Name).IsDeployable }}true{{ end }}"
+      jenkinsfile-path:
+        help: "Define Jenkinsfile PATH used by JobDSL to generate the project pipeline with a different Jenkinsfile Path. Note that by default, Jenkins uses 'Jenkinsfile'."
     groups:
       github:
         flags:

@@ -18,6 +18,7 @@ type Projects struct {
 	List       map[string]Project
 }
 
+// NewProjects creates a list of projects, empty, with DSL path setup by default.
 func NewProjects(InstanceName, repo, Dslpath string, dslDefault bool) *Projects {
 	p := new(Projects)
 	p.DslPath = Dslpath
@@ -28,14 +29,16 @@ func NewProjects(InstanceName, repo, Dslpath string, dslDefault bool) *Projects 
 	return p
 }
 
-func (p *Projects) AddGithub(name string, d *GithubStruct, repoRole string) bool {
+// AddGithub add the github Jenkins project configuration to the list of projects to manage
+func (p *Projects) AddGithub(name string, d *GithubStruct, repoRole, jenkinsfilePath string) bool {
 	data := new(GithubStruct)
 	data.SetFrom(d)
 	p.List[name] = Project{Name: name, SourceType: "github", Github: *data, all: p, RepoRole: repoRole}
 	return true
 }
 
-func (p *Projects) AddGit(name string, d *GitStruct, repoRole string) bool {
+// AddGit add the git Jenkins project configuration to the list of projects to manage
+func (p *Projects) AddGit(name string, d *GitStruct, repoRole, jenkinsfilePath string) bool {
 	data := new(GitStruct)
 	data.SetFrom(d)
 	p.List[name] = Project{Name: name, SourceType: "git", Git: *data, all: p, RepoRole: repoRole}
@@ -43,31 +46,31 @@ func (p *Projects) AddGit(name string, d *GitStruct, repoRole string) bool {
 }
 
 // Generates Jobs-dsl files in the given checked-out GIT repository.
-func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *goforjj.PluginData, status *bool) (_ error) {
+func (p *Projects) Generates(jp *JenkinsPlugin, instanceName string, ret *goforjj.PluginData, status *bool) (_ error) {
 	if !p.DslDefault {
 		log.Printf(ret.StatusAdd("Deploy: JobDSL groovy files ignored. To generate them, unset seed-job-repo and seed-job-path."))
 		return
 	}
 
-	template_dir := jp.template_dir
-	repo_path := path.Join(jp.deploysParentPath, jp.deployEnv)
+	templateDir := jp.template_dir
+	repoPath := path.Join(jp.deploysParentPath, jp.deployEnv)
 
-	if f, err := os.Stat(repo_path); err != nil {
+	if f, err := os.Stat(repoPath); err != nil {
 		return err
 	} else {
 		if !f.IsDir() {
-			return fmt.Errorf(ret.Errorf("Repo cloned path '%s' is not a directory.", repo_path))
+			return fmt.Errorf(ret.Errorf("Repo cloned path '%s' is not a directory.", repoPath))
 		}
 	}
 
-	jobs_dsl_path := path.Join(repo_path, p.DslPath)
-	if f, err := os.Stat(jobs_dsl_path); err != nil {
-		if err := os.MkdirAll(jobs_dsl_path, 0755); err != nil {
+	jobsDSLpath := path.Join(repoPath, p.DslPath)
+	if f, err := os.Stat(jobsDSLpath); err != nil {
+		if err := os.MkdirAll(jobsDSLpath, 0755); err != nil {
 			return err
 		}
 	} else {
 		if !f.IsDir() {
-			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", jobs_dsl_path))
+			return fmt.Errorf(ret.Errorf("path '%s' is not a directory.", jobsDSLpath))
 		}
 	}
 
@@ -77,9 +80,9 @@ func (p *Projects) Generates(jp *JenkinsPlugin, instance_name string, ret *gofor
 
 	for name, prj := range p.List {
 		name = strings.Replace(name, "-", "_", -1)
-		if u, err := tmpl.Generate(prj.Model(jp), template_dir, jobs_dsl_path, name+".groovy"); err != nil {
+		if u, err := tmpl.Generate(prj.Model(jp), templateDir, jobsDSLpath, name+".groovy"); err != nil {
 			log.Printf("Deploy: Unable to generate '%s'. %s",
-				path.Join(jobs_dsl_path, name+".groovy"), ret.Errorf("%s", err))
+				path.Join(jobsDSLpath, name+".groovy"), ret.Errorf("%s", err))
 			return err
 		} else if u {
 			IsUpdated(status)

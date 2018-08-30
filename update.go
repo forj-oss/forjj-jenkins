@@ -74,7 +74,7 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	// TODO: Information not used. To clean it up.
 	projects.setIsProDeploy(strings.ToLower(instanceData.ProDeployment) == "true")
 
-	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra)
+	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra, instanceData.JenkinsfilePath)
 }
 
 func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string) (err error) {
