@@ -7,5 +7,6 @@ then
 fi
 
 /bin/update_user.sh $UID $GID
+/bin/update-docker-group.sh
 /bin/jenkins --version
 exec /bin/su devops -c "/bin/jenkins $*"
