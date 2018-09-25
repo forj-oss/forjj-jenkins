@@ -14,12 +14,8 @@ RUN apk update && \
     update-ca-certificates --fresh && \
     rm -f /var/cache/apk/*tar.gz && \
     adduser devops devops -D && \
-    chmod +xs /bin/update_user.sh && \
+    chmod +xs /bin/update_user.sh /bin/update-docker-group.sh && \
     chmod +x /bin/entrypoint.sh
-
-# Required for DooD
-RUN echo "devops ALL=(root:root) NOPASSWD:SETENV:/bin/docker" >> /etc/sudoers.d/docker && \
-    chmod 600 /etc/sudoers.d/docker
 
 COPY templates/ /templates/
 
