@@ -67,8 +67,8 @@ do
    for TAG in $TAGS
    do
       echo "=> $TAG_BASE:$TAG"
-      sudo docker tag $TAG_BASE $TAG_BASE:$TAG
-      sudo docker push $TAG_BASE:$TAG
+      docker tag $TAG_BASE $TAG_BASE:$TAG
+      docker push $TAG_BASE:$TAG
    done
    echo "=============== DONE"
 done
