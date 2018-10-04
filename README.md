@@ -28,7 +28,7 @@ Using forjj, it is quite easy.
 
 2. Run `forjj update` (or `forjj create` when you create your forge, the first time.)
 3. Run `forjj maintain dev` (`dev` is a deployment example name. See Forjfile for details)
-4. Check at http://localhost:8080. 
+4. Check at http://localhost:8080.
  
    The admin password is `MyAdmin2016` by default.
   
@@ -44,111 +44,14 @@ For details about how templates works or create you own templates, read [the Jen
 
 All jenkins source files are generated from a collection of source templates.
 
-Forjj itself use the templates stored under [templates](templates) to build and deliver itself.
+By default, forjj-jenkins will use the default forjj template to build your Jenkins instance.
+But you create your own forjj jenkins template to deliver your service in the way you need.
 
-When you start this forjj-jenkins component, it will use this [templates subdirectory](templates)
+### Use of our default forjj jenkins template
 
-If this runnable forjj jenkins works for you, you will just need to set proper forjj-jenkins options in your Forjfile.
+The default forjj jenkins template is currently used by `forj-oss` organization to build all declared repositories that has Jenkinsfile.
 
-But you can create your own templates to deploy Jenkins in your company context.
-To create your own templates files, set `applications/<instanceName>/source-templates` in your main Forjfile with the name of the template directory.
-The template directory must be created in your infra repository under `apps/ci/<instanceName>/templates/<source-templates Name>`
-
-At least, a `templates.yaml` must exist with:
-
-```yaml
----
-sources:
-  common:
-run_deploy:
-```
-
-This example will do nothing... So the next will be to ask forjj-jenkins to generate files for your deployment. 
-
-Here is what you will need to do:
-
-1. Set `applications/<instanceName>/deploy-to` if default `docker` does not make sense for you.
-2. Add `<deploy-to Name>` under `sources`, `run_deploy` and optionally `build_deploy` of your templates.yaml
-3. Declare the list of files to create/generate. Files are generated in your deployment repository under `<instance Name>/`
-    
-    create a description text section of the file to copy/generate to store few sub keys:
-    - set `sources/<deploy-to Name or common>/template` with a relative path to the GO template source file. Destination file will be generated with the relative path under `<instance Name>/`
-        `template` and `source` are exclusive. if you set both, an error will occur.
-    - set `sources/<deploy-to Name or common>/source` with a relative path to the source file to copy. Destination file will be copied with the relative path under `<instance Name>/`
-        `template` and `source` are exclusive. if you set both, an error will occur.
-    - set `sources/<deploy-to Name or common>/chmod` to set file mode in octal representation. Default is 0644.
-    - set `sources/<deploy-to Name or common>/tags` to a paired string to use as template tag. Used by `template`. Default is `{{}}`
-        ex: Ansible use `{{}}` by jinja2 template mechanism. So, to avoid conflicts, you can set `#{{}}#` to interpret forjj-jenkins template tags.
-    - set `sources/<deploy-to Name or common>/if` to determine if the file have to be copied or generated. 
-
-      if `if` is set to a non empty string, the file will be copied/generated.
-      The condition is made with GO template to output an empty string or not. ex: `"{{ index .Creds \"app-jenkins-aws-access-key\" }}"`
-      The string can be interpreted by GO template to determine if the file needs to be copied/generated or not. For template data model see next section [template data model](#template_data_model).
-
-4. Define build & deploy commands to execute
-    - set `build_deploy/<deploy-to Name or common>/run` with a shell command to execute
-    - set `build_deploy/<deploy-to Name or common>/run/environment` with a list of shell environment variable to define
-      - under this section, set `<Your Environment Variable>/value` with the value to define. It can be interpreted by GO template with `{{}}`. For template data model see next section [template data model](#template_data_model).
-      - under this section, set `<Your Environment Variable>/if` to define a condition for setting this environment variable.
-
-        if `if` is set to a non empty string, the file will be copied/generated.
-
-        The condition is made with GO template to output an empty string or not.
-        
-        ex: `"{{ lookup .Creds \"app-jenkins-aws-access-key\" }}"`
-        
-        For template data model see next section [template data model]
-
-    - set `build_deploy/<deploy-to Name or common>/run/files` with a list of files to create
-      - under this section, set `<Your relativePath to a file>/content` with the value to define. 
-
-        It can be interpreted by GO template with `{{}}`. 
-
-        For template data model see next section [template data model](#template_data_model).
-
-      - under this section, set `<Your Environment Variable>/if` to define a condition for setting this environment variable.
-
-        if `if` is set to a non empty string, the file will be copied/generated.
-
-        The condition is made with GO template to output an empty string or not. 
-        
-        ex: `"{{ lookup .Creds \"app-jenkins-aws-access-key\" }}"`
-
-        For template data model see next section [template data model]
-      
-      - under this section, set `<Your Environment Variable>/remove-when-done:` to false if you do not want to remove the file when shell command exits. Default is true.
-      - under this section, set `<Your Environment Variable>/create-subdirs:` to true if you want to create relative sub directory if missing. Default is false.
-
-Ex:
-
-```yaml
----
-sources:
-  common:
-    template: relativePath/myfile.txt # Template read from `<infra Repo>/apps/ci/<instanceName>/templates/<source-templates Name>/` and generated to `<deploy Repo>/<instanceName>/`
-    if: "{{if eq .Source.Deploy.Ssl.Method \"manual\" }}true{{ end }}}}" # check ssl method string is equal to "manual" and print out "true" if the condition is true
-    tags: "(())" # Use '(('  '))' as begin/end template tag.
-    chmod: 0400 # Read mode for user only.
-  myDeployToString:
-    source: relative/path/to/myfile.copy # Simple copy from `<infra Repo>/apps/ci/<instanceName>/templates/<source-templates Name>/` to `<deploy Repo>/<instanceName>/`
-    chmod: 0777
-run_deploy:
-  myDeployToString:
-    run: "bin/build-ansible.sh && bin/build-jenkins.sh && bin/provision.sh"
-    environment:
-      DEV_USER: 
-        value: "{{ .Env.Username }}"
-    files:
-      ansible/playbook/roles/jenkins-master-container/files/jenkins-creds.json:
-        content: "{{ index .Creds \"app-jenkins-feature-credentials-json\" }}"
-        if: "{{ index .Creds \"app-jenkins-feature-credentials-json\" }}"
-        remove-when-done: false # Usually used for debugging case.
-        create-subdirs: true # if `ansible/playbook/roles/jenkins-master-container/files` doesn't exist, create it before creating the file.
-```
-
-## Embedded forjj Jenkins template
-
-Currently, the embedded jenkins template implements the following:
+It implements:
 
 - A docker image built from `hub.docker.io/forjdevops/jenkins` [source](https://github.com/forj-oss/jenkins-ci)
 - A collection of default features ([source](https://github.com/forj-oss/jenkins-install-inits))
@@ -163,7 +66,149 @@ Currently, the embedded jenkins template implements the following:
   - ucp - To deploy to a UCP system. **NOT AVAILABLE**
   - marathon - To deploy to dcos/mesos marathon. **NOT AVAILABLE**
 
-This list of elements are not exhaustive and can be updated time to time. Please refer to the (templates.yaml)[templates/templates.yaml] for latest updates.
+The template is configured by your `Forjfile` and `forjj secrets`.
+
+From the Forjfile, you can add more plugins, configure them and configure Jenkins. Forjj will transmit all such information to properly configure Jenkins
+as requested.
+
+For example, by default, jenkins is configured with a jenkins admin account and a default password.
+You can update it with `forjj secrets edit app/jenkins/admin-pwd`
+
+
+### Create your own forjj jenkins template
+
+If you want to manage your Jenkins instance differently than what the default template do, we will need to create your own forjj jenkins template.
+
+This section explains baby steps to start creating it. For template details, check our [template documentation] (TODO)
+
+NOTE: Replace any `<*>` to match your need.
+
+1. In your infra repository, creates  `<infraRepo>/apps/ci/<instanceName>/templates/<templateName>`
+
+    Ex:
+
+    ```bash
+    cd ~/forjj/infra
+    mkdir -p apps/ci/jenkins/template/jenkins-aws
+    ```
+
+2. Update your master Forjfile and add `source-template: <templateName>` under `applications/<instanceName>`
+
+    Ex:
+  
+    ```yaml
+    applications:
+      jenkins:
+        type: ci
+        source-template: jenkins-aws
+    ```
+  
+3. Optionnaly, set a deployment name with `deploy-to` in your Forjfile. By default, forjj-jenkins set it to `docker`
+
+    Depending on the environ you want forjj to deliver (dev, test, production) the deployment technology can be completely different, but must be supported
+    by your team.
+
+    Example:
+    If your team managing Jenkins want to test a new feature or a new plugin, your factory help them to deliver such service under a docker container locally
+    on their workstation, while on production, you use `aws` or `kubernetes`, or any kind of infrastructure to host Jenkins service
+
+    So you can have a `docker` deployment type and `aws` deployment type
+
+    So, the Jenkins development team while running `forjj maintain` will use `docker` by default, but
+    the Jenkins software factory pipepine will deliver with `forjj maintain production` against the `aws` deployment, which will call ansible, kubctl, ... to create and maintain your production instance of Jenkins
+
+    Ex: In production Forjfile
+  
+    ```yaml
+    applications:
+      jenkins:
+        type: ci
+        deploy-to: aws-ansible
+    ```
+
+3. Create the `template.yaml` which defines collection of files, default features and build/deploy commands.
+
+    forjj-jenkins thanks to `deploy-to` can manage differents list of files and feae
+
+    At least, a `templates.yaml` must exist with one deplo
+
+    ```yaml
+    ---
+    sources: # List all source or template files
+      common: # All files described under this section will be generated by forjj-jenkins
+        # Add one of more:
+        # <fileTitle>: { template: , source: , chmod: , tags: }
+        my 1st file: # First use case: Copy a file from template directory.
+          source: relative/path/to/my/file/to/copy # template relative file path which needs to be copied
+          chmod:  0755 # optional. support chmod octal representation only. valid for `source` or `template` file type.
+          if:        # Optional. A template string. If is true if the result of this template return a non null string. 
+                     # valid for `source` or `template` file type.
+        my 2nd file: # Seconf use case: Generate a file from template directory and deployment template data (<plugin>.yaml explained later).
+          template: relative/path/to/my/template/file # template relative file path to a source template file used to generate this file.
+                     # A template file must contains at least {{ }} tag for template replacement. You can change the tag with `tags`.
+          tags: # string which describes a template tag to use. By default, it uses {{}}. The string is cut in 2 sub strings of same size.
+                # The first one is the opened tag like '{{'
+                # The second one the closed tag like '}}'
+      deploy: # Depending on `deploy-to` parameter of your Forjfile
+        docker: # This is the default `deploy-to`. Same as Common section.
+          [...]
+        <DeployOption>: # same as common section.
+          [...]
+    features:
+      common: # Following is basic list of features or plugins to install. This will be the default list to apply on all deployments
+      - "feature:jenkins-init"
+      - "feature:seed-job"
+      - "feature:tcp-slave-agent-port"
+      - "feature:jenkins-pipeline"
+      - "feature:credentials"
+      - "{{ if .Source.ProjectsHasSource \"github\" }}feature:multibranch-github-pipeline{{ end }}"
+      - "{{ if .Source.ProjectsHasSource \"bitbucket\" }}plugin:cloudbees-bitbucket-branch-source{{ end }}"
+      deploy:
+        docker: # List of plugins specifically for the default docker deployment.
+          [...]
+        <DeployOption>: # List of plugins specifically this other deployment.
+          [...]
+    run_deploy: # Called at maintain request
+      docker:
+        run: # string representing the command to run
+        environment: # Optional
+          <environmentVariableName>:
+            if: # Optional. A template string. If is true if the result of this template return a non null string. if false the environment variable is not set.
+            value: # a string or a template string
+        files: # Optional
+          <PathToFile>:
+            content: "{{ index .Creds \"app-jenkins-feature-credentials-json\" }}" # a string or a template string
+            if: # Optional. A template string. If is true if the result of this template return a non null string
+            remove-when-done: true # default is false. if true, the file created will be removed at the end of the script run.
+      <DeployOption>: # same as docker for each deployment.
+        [...]
+    run_build: # Same as run_deploy but called at create/update request
+      [...]
+    ```
+
+### Running `run_deploy` scripts
+
+when forjj-jenkins call a script described by `run_deploy` or `run_build`, a shell command is started with:
+
+- The list of environment as described by `environment`
+- A list of files as described by `files`, created before and removed after if requested.
+- a collection of pre-defined environment variable sent by `forjj-jenkins`
+  - DOOD_SRC    : Obsolete. Use SELF_SRC.
+  - DOOD_DEPLOY : Obsolete. Use SELF_DEPLOY.
+  - GID         : Group ID for the current user.
+  - UID         : User ID for the current user.
+  - LOGNAME     : User name of the current user.
+  - PATH        : Shell path
+  - TERM        : Terminal string
+  - HOSTNAME    : Host or container name
+  - http_proxy  : Proxy information if set
+  - https_proxy : Proxy information if set
+  - no_proxy    : Proxy information if set
+  - HTTP_PROXY  : Proxy information if set
+  - HTTPS_PROXY : Proxy information if set
+  - NO_PROXY    : Proxy information if set
+  - SELF_SRC    : Container Path to the source directory tree.
+  - SELF_DEPLOY : Container Path to the deployments directory tree
 
 ## Forjfile plugin options
 
