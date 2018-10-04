@@ -103,57 +103,65 @@ func (r RunStruct) defineEnv(instance, sourcePath, deployPath string, model *Jen
 	doodBecome := false
 
 	env = r.setEnv([]envMapFunc{
-		envMapFunc{"DOCKER_DOOD", func(par, value string) (ret string, _ []string, ignore bool) {
-			if value != "" {
-				log.Printf("DOOD detected.")
-				dood = true
+		envMapFunc{"DOCKER_DOOD",
+			func(par, value string) (ret string, _ []string, ignore bool) {
+				if value != "" {
+					log.Printf("DOOD detected.")
+					dood = true
+					return
+				}
+				ignore = true
 				return
-			}
-			ignore = true
-			return
+			},
 		},
-		},
-		envMapFunc{"DOOD_SRC", func(par, value string) (ret string, env []string, ignore bool) {
-			if value == "" || !dood {
-				env = []string{"SRC=" + sourcePath}
-				ignore = !dood
+		envMapFunc{"PROXY", r.noEnvFunc},
+		envMapFunc{"DOOD_SOURCE", r.noEnvFunc},
+		envMapFunc{"DOOD_SRC",
+			func(par, value string) (ret string, env []string, ignore bool) {
+				if value == "" || !dood {
+					env = []string{"SRC=" + sourcePath}
+					ignore = !dood
+					return
+				}
+				ret = path.Join(value, instance) + "/"
+				env = []string{"SRC=" + ret}
 				return
-			}
-			ret = path.Join(value, instance) + "/"
-			env = []string{"SRC=" + ret}
-			return
+			},
 		},
-		},
-		envMapFunc{"DOOD_DEPLOY", func(par, value string) (ret string, env []string, ignore bool) {
-			if value == "" || !dood {
-				env = []string{"DEPLOY=" + deployPath}
-				ignore = !dood
+		envMapFunc{"DOOD_DEPLOY",
+			func(par, value string) (ret string, env []string, ignore bool) {
+				if value == "" || !dood {
+					env = []string{"DEPLOY=" + deployPath}
+					ignore = !dood
+					return
+				}
+				ret = path.Join(value, instance) + "/"
+				env = []string{"DEPLOY=" + ret}
 				return
-			}
-			ret = path.Join(value, instance) + "/"
-			env = []string{"DEPLOY=" + ret}
-			return
+			},
 		},
-		},
-		envMapFunc{"DOCKER_DOOD_BECOME", func(par, value string) (ret string, _ []string, ignore bool) {
-			if value != "" {
-				log.Printf("DOOD_BECOME detected.")
-				doodBecome = true
+		envMapFunc{"DOCKER_DOOD_BECOME",
+			func(par, value string) (ret string, _ []string, ignore bool) {
+				if value != "" {
+					log.Printf("DOOD_BECOME detected.")
+					doodBecome = true
+					return
+				}
+				ignore = true
 				return
-			}
-			ignore = true
-			return
+			},
 		},
+		envMapFunc{"GID",
+			func(par, value string) (ret string, _ []string, ignore bool) {
+				ignore = !doodBecome
+				return
+			},
 		},
-		envMapFunc{"GID", func(par, value string) (ret string, _ []string, ignore bool) {
-			ignore = !doodBecome
-			return
-		},
-		},
-		envMapFunc{"UID", func(par, value string) (ret string, _ []string, ignore bool) {
-			ignore = !doodBecome
-			return
-		},
+		envMapFunc{"UID",
+			func(par, value string) (ret string, _ []string, ignore bool) {
+				ignore = !doodBecome
+				return
+			},
 		},
 		envMapFunc{"LOGNAME", r.noEnvFunc},
 		envMapFunc{"PATH", r.noEnvFunc},
@@ -162,9 +170,18 @@ func (r RunStruct) defineEnv(instance, sourcePath, deployPath string, model *Jen
 		envMapFunc{"http_proxy", r.noEnvFunc},
 		envMapFunc{"https_proxy", r.noEnvFunc},
 		envMapFunc{"no_proxy", r.noEnvFunc},
-		envMapFunc{"HTTP_PROXY", r.noEnvFunc},
-		envMapFunc{"HTTPS_PROXY", r.noEnvFunc},
-		envMapFunc{"NO_PROPXY", r.noEnvFunc},
+		envMapFunc{"SELF_SRC",
+			func(par, value string) (ret string, _ []string, _ bool) {
+				ret = sourcePath
+				return
+			},
+		},
+		envMapFunc{"SELF_DEPLOY",
+			func(par, value string) (ret string, _ []string, _ bool) {
+				ret = deployPath
+				return
+			},
+		},
 	})
 
 	for key, envToSet := range r.Env {
