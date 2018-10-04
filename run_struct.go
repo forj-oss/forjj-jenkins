@@ -89,7 +89,7 @@ func (r RunStruct) setEnv(parameters envMapFuncs) (env []string) {
 			v = value
 		}
 		env = append(env, envFunc.key+"="+v)
-		log.Printf("Env added : '%s' = '%s'", envFunc.key, v)
+		log.Printf("Predefined env added : '%s' = '%s'", envFunc.key, v)
 	}
 	return
 }
