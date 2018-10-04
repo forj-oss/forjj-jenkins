@@ -79,7 +79,7 @@ func (r RunStruct) setEnv(parameters envMapFuncs) (env []string) {
 		if envToAdd != nil {
 			env = append(env, envToAdd...)
 			for _, theEnv := range envToAdd {
-				log.Printf("Env added : '%s'", theEnv)
+				log.Printf("More predefined env added : '%s'", theEnv)
 			}
 		}
 		if ignore || (v == "" && value == "") {
@@ -114,7 +114,7 @@ func (r RunStruct) defineEnv(instance, sourcePath, deployPath string, model *Jen
 				return
 			},
 		},
-		envMapFunc{"PROXY", r.noEnvFunc},
+		envMapFunc{"DOCKER_DOOD_PROXY", r.noEnvFunc},
 		envMapFunc{"DOOD_SOURCE", r.noEnvFunc},
 		envMapFunc{"DOOD_SRC",
 			func(par, value string) (ret string, env []string, ignore bool) {
