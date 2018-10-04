@@ -193,22 +193,27 @@ when forjj-jenkins call a script described by `run_deploy` or `run_build`, a she
 - The list of environment as described by `environment`
 - A list of files as described by `files`, created before and removed after if requested.
 - a collection of pre-defined environment variable sent by `forjj-jenkins`
-  - DOOD_SRC    : Obsolete. Use SELF_SRC.
-  - DOOD_DEPLOY : Obsolete. Use SELF_DEPLOY.
-  - GID         : Group ID for the current user.
-  - UID         : User ID for the current user.
-  - LOGNAME     : User name of the current user.
-  - PATH        : Shell path
-  - TERM        : Terminal string
-  - HOSTNAME    : Host or container name
-  - http_proxy  : Proxy information if set
-  - https_proxy : Proxy information if set
-  - no_proxy    : Proxy information if set
-  - HTTP_PROXY  : Proxy information if set
-  - HTTPS_PROXY : Proxy information if set
-  - NO_PROXY    : Proxy information if set
-  - SELF_SRC    : Container Path to the source directory tree.
-  - SELF_DEPLOY : Container Path to the deployments directory tree
+  - DOCKER_DOOD        : docker run helper given by forjj to start a container in DooD mode.
+  - DOCKER_DOOD_BECOME : docker run helper given by forjj to start a container with a different UID/GID.
+  - PROXY              : docker run helper given by forjj to start a container with a proxy setup.
+  - DOOD_SOURCE        : docker run helper given by forjj to start a container with options to mount source/deploy/workspace path
+
+  - DOOD_SRC           : Obsolete. Use SELF_SRC.
+  - DOOD_DEPLOY        : Obsolete. Use SELF_DEPLOY.
+
+  - GID                : Group ID for the current user.
+  - UID                : User ID for the current user.
+  - LOGNAME            : User name of the current user.
+  - PATH               : Shell path
+  - TERM               : Terminal string
+  - HOSTNAME           : Host or container name
+  - http_proxy         : Proxy information if set
+  - https_proxy        : Proxy information if set
+  - no_proxy           : Proxy information if set
+  - SELF_SRC           : Container Path to the source directory tree.
+  - SELF_DEPLOY        : Container Path to the deployments directory tree
+
+NOTE: when forjj-jenkins run a command, it displays each environment variable used to run the command.
 
 ## Forjfile plugin options
 
