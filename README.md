@@ -195,7 +195,7 @@ when forjj-jenkins call a script described by `run_deploy` or `run_build`, a she
 - a collection of pre-defined environment variable sent by `forjj-jenkins`
   - DOCKER_DOOD        : docker run helper given by forjj to start a container in DooD mode.
   - DOCKER_DOOD_BECOME : docker run helper given by forjj to start a container with a different UID/GID.
-  - PROXY              : docker run helper given by forjj to start a container with a proxy setup.
+  - DOCKER_DOOD_PROXY  : docker run helper given by forjj to start a container with a proxy setup.
   - DOOD_SOURCE        : docker run helper given by forjj to start a container with options to mount source/deploy/workspace path
 
   - DOOD_SRC           : Obsolete. Use DOOD_SOURCE. Host path to the source code.
