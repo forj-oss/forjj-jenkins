@@ -198,8 +198,8 @@ when forjj-jenkins call a script described by `run_deploy` or `run_build`, a she
   - PROXY              : docker run helper given by forjj to start a container with a proxy setup.
   - DOOD_SOURCE        : docker run helper given by forjj to start a container with options to mount source/deploy/workspace path
 
-  - DOOD_SRC           : Obsolete. Use SELF_SRC.
-  - DOOD_DEPLOY        : Obsolete. Use SELF_DEPLOY.
+  - DOOD_SRC           : Obsolete. Use DOOD_SOURCE. Host path to the source code.
+  - DOOD_DEPLOY        : Obsolete. Use DOOD_SOURCE. Host path to the deployement code.
 
   - GID                : Group ID for the current user.
   - UID                : User ID for the current user.
