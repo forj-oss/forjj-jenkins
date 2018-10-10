@@ -27,13 +27,15 @@ then
     exit 1
   fi
 
-  if [ "$DOCKERHUB_PASSWORD" = '' ] || [ "$DOCKERHUB_USERNAME" = '' ]
+  if [[ "$DOCKERHUB_PASSWORD" = '' ]] || [[ "$DOCKERHUB_USERNAME" = '' ]]
   then
     echo "DOCKERHUB_PASSWORD and/or DOCKERHUB_USERNAME is missing. You need it to publish."
     exit 1
   fi
 
+  set -e
   docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+  set +e
 fi
 
 TAG_BASE="$(eval "echo $(awk '$1 ~ /image:/ { print $2 }' jenkins.yaml)")"
