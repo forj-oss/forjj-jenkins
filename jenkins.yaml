@@ -1,6 +1,6 @@
 ---
 plugin: "jenkins"
-version: "0.1"
+version: "0.2"
 description: "CI jenkins plugin for FORJJ."
 runtime:
   docker:

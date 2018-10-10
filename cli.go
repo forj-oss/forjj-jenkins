@@ -10,6 +10,7 @@ import (
 	"github.com/forj-oss/goforjj"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
+	"fmt"
 )
 
 type JenkinsApp struct {
@@ -29,13 +30,34 @@ type Params struct {
 	daemon       *bool // Currently not used - Lot of concerns with daemonize in go... Stay in foreground
 }
 
+var (
+	build_branch string
+	build_commit string
+	build_date string
+	build_tag string
+)
+
 func (a *JenkinsApp) init() {
 	a.loadPluginDef()
 
-	a.App = kingpin.New("jenkins", "CI jenkins plugin for FORJJ.")
-	version := "0.2"
+	appName := "forjj-jenkins"
+	a.App = kingpin.New(appName, "CI jenkins plugin for FORJJ.")
+	var version string
+	if PRERELEASE {
+		version = appName + " pre-release V" + VERSION
+	} else {
+		version = appName + " V" + VERSION
+	}
+
+	if build_branch != "master" {
+		version += fmt.Sprintf(" branch %s", build_branch)
+	}
+	if build_tag == "false" {
+		version += fmt.Sprintf(" patched - %s - %s", build_date, build_commit)
+	}
+
 	if version != "" {
-		a.App.Version(version)
+		a.App.Version(version).Author("Christophe Larsonneur <clarsonneur@gmail.com>")
 	}
 
 	// true to create the Infra
