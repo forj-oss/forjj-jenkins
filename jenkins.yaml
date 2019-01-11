@@ -71,6 +71,8 @@ objects:
           service-port:
             default: 8080
             help: "Expected jenkins instance port number."
+          public-service-url:
+            help: External public Jenkins service url. Set this flag if Jenkins is proxied from a proxy out of your Software Factory.
       ssl:
         flags:
           method:
