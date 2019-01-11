@@ -27,6 +27,8 @@ func (d *DeployApp) DefineDefaultPublicURL() {
 	if d.Deployment.PublicServiceUrl != "" {
 		if _, err := url.ParseRequestURI(d.Deployment.PublicServiceUrl); err != nil {
 			gotrace.Error("Public Service URL '%s' is invalid. %s. Using default setup.", d.Deployment.PublicServiceUrl, err)
+		} else {
+			return
 		}
 	}
 
