@@ -6,12 +6,14 @@ func (t *DeployStruct) SetFrom(d *DeployStruct) (status bool) {
 	}
 	status = SetIfSet(&t.ServiceAddr, d.ServiceAddr)
 	status = SetOnceIfSet(&t.To, d.To) || status
+	status = SetIfSet(&t.PublicServiceUrl, d.PublicServiceUrl) || status
 	return SetIfSet(&t.ServicePort, d.ServicePort) || status
 }
 
 func (t *DeployStruct) UpdateFrom(d *DeployStruct) (status bool) {
 	status = SetOrClean(&t.ServiceAddr, d.ServiceAddr)
 	status = SetIfSet(&t.To, d.To) || status
+	status = SetOrClean(&t.PublicServiceUrl, d.PublicServiceUrl) || status
 	return SetOrClean(&t.ServicePort, d.ServicePort) || status
 }
 

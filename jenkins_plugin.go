@@ -247,7 +247,7 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 
 	var Ssl YamlSSLStruct = p.yaml.Deploy.Ssl
 	if ok := Ssl.UpdateFrom(&instance_data.SslStruct); ok {
-		ret.StatusAdd("Deployment to '%s' updated.", instance_data.To)
+		ret.StatusAdd("'%s' SSL configuration updated.", instance_data.To)
 		IsUpdated(status)
 	}
 	p.yaml.Deploy.Ssl = Ssl
