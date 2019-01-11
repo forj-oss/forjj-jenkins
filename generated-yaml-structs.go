@@ -8,6 +8,7 @@ package main
 // Groups structure
 
 type DeployStruct struct {
+	PublicServiceUrl string `json:"deploy-public-service-url"` // External public Jenkins service url. Set this flag if Jenkins is proxied from a proxy out of your Software Factory.
 	ServiceAddr string `json:"deploy-service-addr"` // Exposed service CNAME or IP address of the expected jenkins instance. By default, it uses localhost.
 	ServicePort string `json:"deploy-service-port"` // Expected jenkins instance port number.
 	To string `json:"deploy-to"` // Deployment name used to deploy jenkins.
@@ -200,7 +201,7 @@ type AppMaintainStruct struct {
 // YamlDesc has been created from your 'jenkins.yaml' file.
 const YamlDesc = "---\n" +
    "plugin: \"jenkins\"\n" +
-   "version: \"0.1\"\n" +
+   "version: \"0.2\"\n" +
    "description: \"CI jenkins plugin for FORJJ.\"\n" +
    "runtime:\n" +
    "  docker:\n" +
@@ -271,6 +272,8 @@ const YamlDesc = "---\n" +
    "          service-port:\n" +
    "            default: 8080\n" +
    "            help: \"Expected jenkins instance port number.\"\n" +
+   "          public-service-url:\n" +
+   "            help: External public Jenkins service url. Set this flag if Jenkins is proxied from a proxy out of your Software Factory.\n" +
    "      ssl:\n" +
    "        flags:\n" +
    "          method:\n" +

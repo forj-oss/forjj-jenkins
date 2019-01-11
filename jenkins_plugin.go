@@ -38,16 +38,6 @@ type JenkinsPlugin struct {
 	auths             *DockerAuths
 }
 
-type DeployApp struct {
-	Deployment DeployStruct
-	Name       string
-	Type       string
-	// Those 2 different parameters are defined at create time and can be updated with change.
-	// There are default deployment task and name. This can be changed at maintain time
-	// to reflect the maintain deployment task to execute.
-	Ssl YamlSSLStruct
-}
-
 type YamlSSLStruct struct {
 	CaCertificate string `yaml:"ca-certificate,omitempty"` // CA root certificate which certify your jenkins instance.
 	Certificate   string `yaml:"certificate,omitempty"`    // SSL Certificate file to certify your jenkins instance.
@@ -179,6 +169,9 @@ func (p *JenkinsPlugin) initialize_from(r *CreateReq, ret *goforjj.PluginData) (
 	// Set SSL data
 	p.yaml.Deploy.Ssl.SetFrom(&jenkins_instance.SslStruct)
 
+	// Define default public url if not set.
+	p.yaml.Deploy.DefineDefaultPublicURL()
+
 	// Forjj predefined settings (instance/organization) are set at create time only.
 	// I do not recommend to update them, manually by hand in the `forjj-jenkins.yaml`.
 	// Updating the instance name could be possible but not for now.
@@ -258,6 +251,9 @@ func (p *JenkinsPlugin) update_from(r *UpdateReq, ret *goforjj.PluginData, statu
 		IsUpdated(status)
 	}
 	p.yaml.Deploy.Ssl = Ssl
+
+	// Define default public url if not set.
+	p.yaml.Deploy.DefineDefaultPublicURL()
 
 	if err := p.DefineDeployCommand(); err != nil {
 		ret.Errorf("Unable to update the deployement command. %s", err)
