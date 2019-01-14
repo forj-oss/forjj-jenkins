@@ -16,6 +16,12 @@ import (
 // ret_data contains the response structure to return back to forjj.
 //
 func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCode int) {
+	if req.Forj.Debug != "" {
+		gotrace.SetDebugMode(req.Forj.Debug)
+	} else {
+		gotrace.SetWarning()
+	}
+
 	p, code := req.check_source_existence(ret)
 	if p == nil {
 		return code
@@ -74,6 +80,12 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 // forjj-jenkins.yaml is loaded by default.
 //
 func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) {
+	if req.Forj.Debug != "" {
+		gotrace.SetDebugMode(req.Forj.Debug)
+	} else {
+		gotrace.SetWarning()
+	}
+
 	p, ok := req.checkSourceExistence(ret)
 	if !ok {
 		return
@@ -144,6 +156,12 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 // ret_data contains the response structure to return back to forjj.
 //
 func DoMaintain(r *http.Request, req *MaintainReq, ret *goforjj.PluginData) (httpCode int) {
+	if req.Forj.Debug != "" {
+		gotrace.SetDebugMode(req.Forj.Debug)
+	} else {
+		gotrace.SetWarning()
+	}
+
 	if !req.checkSourceExistence(ret) {
 		return
 	}
