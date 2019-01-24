@@ -4,29 +4,30 @@
 package main
 
 import (
+	"fmt"
 	log "forjj-jenkins/reportlogs"
 	"strings"
 
 	"github.com/forj-oss/goforjj"
 )
 
-func (r *JenkinsPlugin) update_jenkins_sources(ret *goforjj.PluginData, updated *bool) (err error) {
-	if err = r.DefineSources(); err != nil {
+func (jp *JenkinsPlugin) update_jenkins_sources(ret *goforjj.PluginData, updated *bool) (err error) {
+	if err = jp.DefineSources(); err != nil {
 		log.Printf(ret.Errorf("%s", err))
 		return
 	}
 
 	log.Printf("Start copying source files...")
-	if err = r.copy_source_files(ret, updated); err != nil {
+	if err = jp.copy_source_files(ret, updated); err != nil {
 		return
 	}
 
 	log.Printf("Start Generating source files...")
-	if err = r.generate_source_files(ret, updated); err != nil {
+	if err = jp.generate_source_files(ret, updated); err != nil {
 		return
 	}
 
-	if err = r.generate_jobsdsl(ret, updated); err != nil {
+	if err = jp.generate_jobsdsl(ret, updated); err != nil {
 		return
 	}
 
@@ -78,7 +79,8 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 }
 
 func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string) (err error) {
-	run, found := jp.templates_def.Build[jp.yaml.Deploy.Deployment.To]
+	deployTo := jp.yaml.Deploy.Deployment.To
+	run, found := jp.templates_def.Build[deployTo]
 	if !found {
 		log.Printf("No run_build section defined for deploy-to=%s. No build processed. If you need one, create run_build/%s: in templates.yaml", jp.deployEnv, jp.deployEnv)
 		return
@@ -87,9 +89,28 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 	model := jp.Model()
 	model.loadCreds(username, jp.InstanceName, creds)
 
-	if err = run.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
-		log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)
+	if run.Steps == nil || len(run.Steps) == 0 {
+		if run.RunCommand == "" {
+			log.Printf("yaml:/run_build/%s/run is depreciated. Use yaml:/run_build/%s/steps and yaml:/run_build/%s/tasks", deployTo, deployTo, deployTo)
+		}
+		if err = run.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
+			log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)
+		}
 		return
 	}
+
+	for _, stepName := range run.Steps {
+		step, found := run.Tasks[stepName]
+		if !found {
+			err = fmt.Errorf("Cannot run '%s'Step. '%s' from %s/%s unfound", stepName, stepName, "run_build", deployTo)
+			return
+		}
+
+		if err = step.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
+			err = fmt.Errorf("Unable to build %s to %s. %s", stepName, jp.yaml.Deploy.Deployment.To, err)
+			return
+		}
+	}
+
 	return
 }
