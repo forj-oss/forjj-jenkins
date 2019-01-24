@@ -78,7 +78,7 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra, instanceData.JenkinsfilePath)
 }
 
-func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string) (err error) {
+func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string, createSteps bool) (err error) {
 	deployTo := jp.yaml.Deploy.Deployment.To
 	run, found := jp.templates_def.Build[deployTo]
 	if !found {
@@ -89,7 +89,16 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 	model := jp.Model()
 	model.loadCreds(username, jp.InstanceName, creds)
 
-	if run.Steps == nil || len(run.Steps) == 0 {
+	var runNormalSteps, runFailureSteps []string 
+	if createSteps {
+		runNormalSteps = run.Steps.WhenCreate
+		runFailureSteps = run.Steps.WhenCreateFailed
+	} else {
+		runNormalSteps = run.Steps.WhenUpdate
+		runFailureSteps = run.Steps.WhenUpdateFailed
+	}
+
+	if runNormalSteps == nil || len(runNormalSteps) == 0 {
 		if run.RunCommand == "" {
 			log.Printf("yaml:/run_build/%s/run is depreciated. Use yaml:/run_build/%s/steps and yaml:/run_build/%s/tasks", deployTo, deployTo, deployTo)
 		}
@@ -99,10 +108,24 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 		return
 	}
 
-	for _, stepName := range run.Steps {
-		step, found := run.Tasks[stepName]
+	defer func () {
+		if err == nil {
+			return
+		}
+
+		jp.runSteps(deployTo, runFailureSteps, run.Tasks, model)
+	}()
+
+	err = jp.runSteps(deployTo, runNormalSteps, run.Tasks, model)
+
+	return
+}
+
+func (jp *JenkinsPlugin) runSteps(deployTo string, steps []string, tasks map[string]RunStruct, model *JenkinsPluginModel) (err error) {
+	for _, stepName := range steps {
+		step, found := tasks[stepName]
 		if !found {
-			err = fmt.Errorf("Cannot run '%s'Step. '%s' from %s/%s unfound", stepName, stepName, "run_build", deployTo)
+			err = fmt.Errorf("Cannot run '%s' Step. '%s' from run_build/%s unfound", stepName, stepName, deployTo)
 			return
 		}
 
@@ -111,6 +134,5 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 			return
 		}
 	}
-
 	return
 }

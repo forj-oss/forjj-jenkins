@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	log "forjj-jenkins/reportlogs"
 	"os"
 	"path"
@@ -60,7 +61,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 	}
 	// start a command as described by the source code.
 
-	if p.run.Steps == nil || len(p.run.Steps) == 0 {
+	if p.run.Steps.WhenDeploy == nil || len(p.run.Steps.WhenDeploy) == 0 {
 		if p.run.RunCommand == "" {
 			log.Printf("yaml:/run is depreciated. Use yaml:/steps and yaml:/tasks")
 		}
@@ -69,18 +70,39 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 			return
 		}
 	}
+	var err error
 
-	for _, stepName := range p.run.Steps {
-		step, found := p.run.Tasks[stepName]
+	defer func(){
+		if err == nil {
+			return
+		}
+		if err = r.runSteps(p.run.Steps.WhenDeployFailed, p.run.Tasks, p.Model(), p) ; err != nil {
+			log.Errorf("%s", err)
+			return
+		}
+	}()
+
+	if err = r.runSteps(p.run.Steps.WhenDeploy, p.run.Tasks, p.Model(), p) ; err != nil {
+		log.Errorf("%s", err)
+		return
+	}
+
+	return true
+}
+
+func (r *MaintainReq) runSteps(steps []string, tasks map[string]RunStruct, model *JenkinsPluginModel, jp *JenkinsPlugin) (err error) {
+	instance := r.Forj.ForjjInstanceName
+	for _, stepName := range steps {
+		step, found := jp.run.Tasks[stepName]
 		if !found {
-			log.Errorf("Cannot run '%s' Step. '%s' from %s unfound", stepName, stepName, "run_deploy")
+			err = fmt.Errorf("Cannot run '%s' Step. '%s' from %s unfound", stepName, stepName, "run_deploy")
 			return
 		}
 
-		if err := step.run(instance, p.source_path, p.deployPath, p.Model(), p.auths); err != nil {
-			log.Errorf("Unable to build %s to %s. %s", stepName, p.yaml.Deploy.Deployment.To, err)
+		if err = step.run(instance, jp.source_path, jp.deployPath, jp.Model(), jp.auths); err != nil {
+			err = fmt.Errorf("Unable to build %s to %s. %s", stepName, jp.yaml.Deploy.Deployment.To, err)
 			return
 		}
 	}
-	return true
+	return
 }

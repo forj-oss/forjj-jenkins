@@ -31,7 +31,7 @@ type JenkinsPlugin struct {
 	template_dir      string
 	template_file     string
 	templates_def     YamlTemplates // See templates.go. templates.yaml structure.
-	run               StepsRunStruct
+	run               DeployStepsRunStruct
 	sources           map[string]TmplSource
 	templates         map[string]TmplSource
 	built             map[string]TmplSource

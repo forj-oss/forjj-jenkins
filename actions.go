@@ -49,7 +49,7 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds); err != nil {
+	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, true); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
@@ -127,7 +127,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	if ret.ErrorMessage != "" {
 		return
 	}
-	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds); err != nil {
+	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, false); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
