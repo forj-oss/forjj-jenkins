@@ -7,6 +7,6 @@ package main
 type DeployStepsRunStruct struct {
 	Steps     DeployStepsStruct    `yaml:",omitempty"`
 	Tasks     map[string]RunStruct `yaml:",omitempty"`
-	RunStruct                      // Kept for compatibility. if Steps/Tasks are defined, RunStruct will be ignored.
+	RunStruct `yaml:",inline"`     // Kept for compatibility. if Steps/Tasks are defined, RunStruct will be ignored.
 	// This struct is ignored from `forjj update` side as well.
 }

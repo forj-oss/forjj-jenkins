@@ -5,8 +5,8 @@ package main
 // RunCommand is still supported but ignored if steps are define
 // Env and Files can be defined as global run use case
 type BuildStepsRunStruct struct {
-	Steps BuildStepsStruct             `yaml:",omitempty"`
-	Tasks map[string]RunStruct `yaml:",omitempty"`
-	RunStruct // Kept for compatibility. if Steps/Tasks are defined, RunStruct will be ignored.
-	          // This struct is ignored from `forjj update` side as well.
+	Steps     BuildStepsStruct     `yaml:",omitempty"`
+	Tasks     map[string]RunStruct `yaml:",omitempty"`
+	RunStruct `yaml:",inline"`     // Kept for compatibility. if Steps/Tasks are defined, RunStruct will be ignored.
+	// This struct is ignored from `forjj update` side as well.
 }
