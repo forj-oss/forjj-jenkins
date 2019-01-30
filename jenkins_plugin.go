@@ -8,10 +8,11 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/forj-oss/forjj/utils"
 	"github.com/forj-oss/goforjj"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type JenkinsPluginSourceModel struct {
@@ -32,6 +33,7 @@ type JenkinsPlugin struct {
 	template_file     string
 	templates_def     YamlTemplates // See templates.go. templates.yaml structure.
 	run               DeployStepsRunStruct
+	runTasks          []string // Tasks to execute at update time.
 	sources           map[string]TmplSource
 	templates         map[string]TmplSource
 	built             map[string]TmplSource
@@ -62,6 +64,12 @@ func (p *JenkinsPlugin) setEnv(deployEnv, instanceName string) {
 	p.deployPath = path.Join(p.deploysParentPath, deployEnv, instanceName)
 	p.deployEnv = deployEnv
 	p.InstanceName = instanceName
+}
+
+// setRunTasks get a list of tasks from a formatted string
+func (p *JenkinsPlugin) setRunTasks(runTasks string) error {
+	p.runTasks = strings.Split(runTasks, ", ")
+	return nil
 }
 
 func (p *JenkinsPlugin) defineTemplateDir(jenkins_instance AppInstanceStruct) error {

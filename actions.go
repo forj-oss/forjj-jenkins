@@ -127,6 +127,9 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	if ret.ErrorMessage != "" {
 		return
 	}
+
+	p.setRunTasks(req.Forj.RunTasks) 
+
 	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, false); err != nil {
 		log.Errorf("%s", err)
 		return

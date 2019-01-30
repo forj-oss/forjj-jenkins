@@ -155,6 +155,7 @@ type CreateArgReq struct {
 type UpdateReq struct {
 	Forj struct {
 		ForjCommonStruct
+		RunTasks string `json:"run-tasks"`
 	}
 	ForjExtent map[string]string `json:",omitempty"`
 
@@ -228,6 +229,9 @@ const YamlDesc = "---\n" +
    "      help: \"Where the source dir is located for jenkins plugin.\"\n" +
    "    forjj-username:\n" +
    "      help: \"User name running forjj\"\n" +
+   "  update:\n" +
+   "    run-tasks:\n" +
+   "      help: Define the list of forjj-jenkins supported tasks as defined by the templates.yaml\n" +
    "  maintain:\n" +
    "    deploy-to:\n" +
    "      default: docker\n" +
