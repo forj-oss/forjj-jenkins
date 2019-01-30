@@ -27,6 +27,9 @@ task_flags:
       help: "Where the source dir is located for jenkins plugin."
     forjj-username:
       help: "User name running forjj"
+  update:
+    run-tasks:
+      help: Define the list of forjj-jenkins supported tasks as defined by the templates.yaml
   maintain:
     deploy-to:
       default: docker

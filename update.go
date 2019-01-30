@@ -98,6 +98,11 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 		runFailureSteps = run.Steps.WhenUpdateFailed
 	}
 
+	if jp.runTasks != nil && len(jp.runTasks) > 0 {
+		runNormalSteps = jp.runTasks
+		runFailureSteps = []string{}
+	}
+
 	if runNormalSteps == nil || len(runNormalSteps) == 0 {
 		if run.RunCommand == "" {
 			log.Printf("yaml:/run_build/%s/run is depreciated. Use yaml:/run_build/%s/steps and yaml:/run_build/%s/tasks", deployTo, deployTo, deployTo)
@@ -125,7 +130,7 @@ func (jp *JenkinsPlugin) runSteps(deployTo string, steps []string, tasks map[str
 	for _, stepName := range steps {
 		step, found := tasks[stepName]
 		if !found {
-			err = fmt.Errorf("Cannot run '%s' Step. '%s' from run_build/%s unfound", stepName, stepName, deployTo)
+			err = fmt.Errorf("Cannot run '%s' Step. '%s' was not defined in the `templates.yaml` under `run_build/%s` ", stepName, stepName, deployTo)
 			return
 		}
 
