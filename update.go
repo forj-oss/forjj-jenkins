@@ -89,7 +89,7 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 	model := jp.Model()
 	model.loadCreds(username, jp.InstanceName, creds)
 
-	var runNormalSteps, runFailureSteps []string 
+	var runNormalSteps, runFailureSteps []string
 	if createSteps {
 		runNormalSteps = run.Steps.WhenCreate
 		runFailureSteps = run.Steps.WhenCreateFailed
@@ -113,7 +113,7 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 		return
 	}
 
-	defer func () {
+	defer func() {
 		if err == nil {
 			return
 		}
@@ -127,10 +127,23 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 }
 
 func (jp *JenkinsPlugin) runSteps(deployTo string, steps []string, tasks map[string]RunStruct, model *JenkinsPluginModel) (err error) {
+	tasksList := "None"
+	if len(tasks) > 0 {
+		for name, task := range tasks {
+			tasksList += "- " + name
+			if task.Description != "" {
+				tasksList += " - " + task.Description
+			} else {
+				tasksList += " - (description empty)"
+			}
+			tasksList += "\n"
+		}
+	}
 	for _, stepName := range steps {
 		step, found := tasks[stepName]
 		if !found {
-			err = fmt.Errorf("Cannot run '%s' Step. '%s' was not defined in the `templates.yaml` under `run_build/%s` ", stepName, stepName, deployTo)
+			err = fmt.Errorf("Cannot run '%s' Step. '%s' was not defined in the `templates.yaml` under `run_build/%s`. Possible tasks are:\n%s",
+				stepName, stepName, deployTo, tasksList)
 			return
 		}
 

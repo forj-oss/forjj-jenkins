@@ -20,7 +20,7 @@
                 "service",
                 "start",
                 "--socket-path",
-                "/home/larsonsh/tmp/forjj-test/.forj-workspace/lib"
+                "/tmp/forjj/forjj-027650506/dev"
             ],
             "showLog": true
         }
