@@ -8,11 +8,11 @@ import (
 )
 
 type RunStruct struct {
-	StepName   string               `yaml:"name,omitempty"`
-	RunCommand string               `yaml:"run"`
-	Env        map[string]EnvStruct `yaml:"environment"`
-	Files      RunFilesStruct
-
+	StepName    string `yaml:"name,omitempty"`
+	RunCommand  string `yaml:"run"`
+	Description string
+	Env         map[string]EnvStruct `yaml:"environment"`
+	Files       RunFilesStruct
 }
 
 // run execute the defined command with the context model and docker authentication given
