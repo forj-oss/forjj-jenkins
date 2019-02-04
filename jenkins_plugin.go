@@ -68,7 +68,11 @@ func (p *JenkinsPlugin) setEnv(deployEnv, instanceName string) {
 
 // setRunTasks get a list of tasks from a formatted string
 func (p *JenkinsPlugin) setRunTasks(runTasks string) error {
-	p.runTasks = strings.Split(runTasks, ", ")
+	tasks := strings.Trim(runTasks, " \n")
+	if tasks == "" {
+		return nil
+	}
+	p.runTasks = strings.Split(tasks, ", ")
 	return nil
 }
 
