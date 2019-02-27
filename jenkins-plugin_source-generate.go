@@ -135,7 +135,7 @@ func (p *JenkinsPlugin) addBuiltFiles(ret *goforjj.PluginData, updated *bool) (e
 func (p *JenkinsPlugin) addGeneratedFiles(ret *goforjj.PluginData, updated *bool) (err error) {
 	for file, desc := range p.generated {
 		sourceStatus := false
-		src := path.Join(desc.Generated)
+		src := path.Join(p.source_path, desc.Generated)
 		dest := path.Join(p.deployPath, desc.Generated)
 
 		if stat, err := os.Stat(src); err != nil {
