@@ -23,7 +23,7 @@ func (jp *JenkinsPlugin) update_jenkins_sources(ret *goforjj.PluginData, updated
 	}
 
 	log.Printf("Start copying existing tasks generated source files...")
-	if err = jp.copy_source_files(ret, updated); err != nil {
+	if err = jp.copyGeneratedSourceFiles(ret, updated); err != nil {
 		return
 	}
 
