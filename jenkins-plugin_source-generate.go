@@ -33,6 +33,30 @@ func (p *JenkinsPlugin) copy_source_files(ret *goforjj.PluginData, status *bool)
 	return
 }
 
+// copyGeneratedSourceFiles copy all generated source files, available in the source repo.
+func (p *JenkinsPlugin) copyGeneratedSourceFiles(ret *goforjj.PluginData, status *bool) (err error) {
+	for file, desc := range p.generated {
+		sourceStatus := false
+		src := path.Join(p.source_path, desc.Generated)
+		dest := path.Join(p.deployPath, desc.Generated)
+
+		if _, err := os.Stat(src); err != nil {
+			log.Printf("Deploy: copy '%s' to '%s' is ignored as source is currently not found. %s", src, dest, err)
+		}
+		if sourceStatus, err = p.copyFile(src, dest, desc.Chmod); err != nil {
+			log.Printf(ret.Errorf("%s.", err))
+		} else if sourceStatus {
+			IsUpdated(status)
+			log.Printf("Deploy: Copied generated '%s' to '%s'", src, dest)
+			log.Printf(ret.StatusAdd("Deploy: Generated %s (%s) copied.", file, desc.Generated))
+			ret.AddFile(goforjj.FilesDeploy, path.Join(p.InstanceName, desc.Generated))
+		} else {
+			log.Printf("Deploy: Generated '%s' not updated.", dest)
+		}
+	}
+	return
+}
+
 // copyFile do a file copy from a source repo to a deploy repo.
 func (p *JenkinsPlugin) copyFile(src, dest string, chmod os.FileMode) (status bool, err error) {
 	parent := path.Dir(dest)
