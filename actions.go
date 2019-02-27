@@ -59,6 +59,11 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 		return
 	}
 
+	if err := p.addGeneratedFiles(ret, nil); err != nil {
+		log.Errorf("%s", err)
+		return
+	}
+
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, nil) != nil {
 		return
 	}
@@ -128,7 +133,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 		return
 	}
 
-	p.setRunTasks(req.Forj.RunTasks) 
+	p.setRunTasks(req.Forj.RunTasks)
 
 	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, false); err != nil {
 		log.Errorf("%s", err)
@@ -136,6 +141,10 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 	}
 
 	if err := p.addBuiltFiles(ret, &updated); err != nil {
+		log.Errorf("%s", err)
+		return
+	}
+	if err := p.addGeneratedFiles(ret, &updated); err != nil {
 		log.Errorf("%s", err)
 		return
 	}

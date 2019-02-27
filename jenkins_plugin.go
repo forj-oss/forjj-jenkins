@@ -34,10 +34,13 @@ type JenkinsPlugin struct {
 	templates_def     YamlTemplates // See templates.go. templates.yaml structure.
 	run               DeployStepsRunStruct
 	runTasks          []string // Tasks to execute at update time.
-	sources           map[string]TmplSource
-	templates         map[string]TmplSource
-	built             map[string]TmplSource
-	auths             *DockerAuths
+
+	sources   map[string]TmplSource
+	templates map[string]TmplSource
+	built     map[string]TmplSource
+	generated map[string]TmplSource
+
+	auths *DockerAuths
 }
 
 type YamlSSLStruct struct {

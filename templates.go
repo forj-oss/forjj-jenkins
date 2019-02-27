@@ -2,10 +2,8 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,7 +11,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/forj-oss/forjj-modules/trace"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,16 +45,6 @@ type TmplSources struct {
 }
 
 type TmplSourcesStruct map[string]TmplSource
-
-type TmplSource struct {
-	Chmod    os.FileMode
-	Template string
-	Tag      string // template string to use.
-	Source   string
-	Built    string
-	If       string `yaml:"if"` // If `If` is empty, the file will be ignored. otherwise the file will copied/generated
-	// as usual.
-}
 
 type EnvStruct struct {
 	Value string
@@ -147,6 +134,7 @@ func (p *JenkinsPlugin) DefineSources() error {
 	p.sources = make(map[string]TmplSource)
 	p.templates = make(map[string]TmplSource)
 	p.built = make(map[string]TmplSource)
+	p.generated = make(map[string]TmplSource)
 
 	choose_file := func(file string, f TmplSource) error {
 		if file == "" {
@@ -171,6 +159,10 @@ func (p *JenkinsPlugin) DefineSources() error {
 		} else if f.Built != "" {
 			p.built[file] = f
 			log.Printf("BUILT: selected: %s", file)
+		} else if f.Generated != "" {
+			p.generated[file] = f
+			log.Printf("GENERATED: selected: %s", file)
+			f.storeMD5(path.Join(p.source_path, f.Generated))
 		}
 		return nil
 	}
@@ -192,106 +184,6 @@ func (p *JenkinsPlugin) DefineSources() error {
 	p.CleanSourceModel()
 
 	return nil
-}
-
-// Generate read a source file and interpret it with text/template.
-// It reads the source file, generate the final file and state if file generated has been updated or not.
-//
-// It permits to use another template tag to avoid conflict with the code to generate.
-// This Tag have to define a pair string. Ex: "(())" the string is split in 2, to define the begin and end tag. ie begin="((", end="))"
-// "((" is invalid because begin == end == "("
-// "[[]" is also invalid, because the tag size is not divided per 2 (size is 3)
-//
-// When a different tag is used, any existing {{}} in source file will be kept after the template generation.
-func (ts *TmplSource) Generate(tmpl_data interface{}, template_dir, dest_path, dest_name string) (updated bool, _ error) {
-	src := path.Join(template_dir, ts.Template)
-	dest := path.Join(dest_path, dest_name)
-	parent := path.Dir(dest)
-
-	if parent != "." {
-		if _, err := os.Stat(parent); err != nil {
-			os.MkdirAll(parent, 0755)
-			updated = true
-		}
-	}
-
-	var data string
-	if b, err := ioutil.ReadFile(src); err != nil {
-		return false, fmt.Errorf("Load issue. %s", err)
-	} else {
-		data = string(b)
-	}
-
-	if ts.Tag != "" {
-		if v := len(ts.Tag); v < 4 {
-			return false, fmt.Errorf("%s: tag template string must have at least 2 cars for 'begin' and 'end' tag. '%s' is too small", ts.Template, ts.Tag)
-		}
-		if v := len(ts.Tag); v%2 != 0 {
-			return false, fmt.Errorf("%s: tag template string must define begin and end different tag, each of same size. Got %d", ts.Template, v)
-		}
-		tagSize := len(ts.Tag) / 2
-		tag1 := ts.Tag[0:tagSize]
-		tag2 := ts.Tag[tagSize:]
-
-		if tag1 == tag2 {
-			return false, fmt.Errorf("%s: tag template string (%s) must define different string for begin/end tag. Got begin='%s' vs end='%s'",
-				ts.Template, ts.Tag, tag1, tag2)
-		}
-
-		if tag1 == "{{" || tag1 == "}}" {
-			return false, fmt.Errorf("%s: begin tag '%s' cannot be '{{' or '}}'", ts.Template, tag1)
-		}
-		if tag2 == "{{" || tag2 == "}}" {
-			return false, fmt.Errorf("%s: end tag '%s' cannot be '{{' or '}}'", ts.Template, tag2)
-		}
-
-		gotrace.Trace("Tag: begin='%s', end='%s'", tag1, tag2)
-
-		replacer := map[string]string{
-			"}}": tag1 + "`}}`" + tag2,
-			"{{": tag1 + "`{{`" + tag2,
-			tag1: "{{",
-			tag2: "}}",
-		}
-		for _, tagSel := range []string{"{{", "}}", tag1, tag2} {
-			data = strings.Replace(data, tagSel, replacer[tagSel], -1)
-		}
-	}
-
-	data = strings.Replace(data, "}}\\\n", "}}", -1)
-
-	t, err := template.New(src).Funcs(template.FuncMap{
-		"lookup": lookup,
-	}).Parse(data)
-	if err != nil {
-		return false, fmt.Errorf("Template issue. %s", err)
-	}
-
-	orig_md5, _ := md5sum(dest)
-	final_md5_file := md5.New()
-
-	if out, err := os.Create(dest); err != nil {
-		return false, fmt.Errorf("Unable to create %s. %s", dest, err)
-	} else {
-		multi_write_file := io.MultiWriter(out, final_md5_file)
-		if err := t.Execute(multi_write_file, tmpl_data); err != nil {
-			return false, fmt.Errorf("Unable to interpret %s. %s", dest, err)
-		}
-		out.Close()
-	}
-	final_md5 := final_md5_file.Sum(nil)
-	if orig_md5 != nil {
-		updated = updated || !bytes.Equal(orig_md5, final_md5)
-	} else {
-		updated = true
-	}
-
-	if u, err := set_rights(dest, ts.Chmod); err != nil {
-		return false, fmt.Errorf("%s", err)
-	} else {
-		updated = updated || u
-	}
-	return
 }
 
 func lookup(m map[string]interface{}, key string) (interface{}, error) {

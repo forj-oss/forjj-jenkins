@@ -74,7 +74,6 @@ as requested.
 For example, by default, jenkins is configured with a jenkins admin account and a default password.
 You can update it with `forjj secrets edit app/jenkins/admin-pwd`
 
-
 ### Create your own forjj jenkins template
 
 If you want to manage your Jenkins instance differently than what the default template do, we will need to create your own forjj jenkins template.
@@ -130,7 +129,9 @@ NOTE: Replace any `<*>` to match your need.
 
     forjj-jenkins thanks to `deploy-to` can manage differents list of files and feae
 
-    At least, a `templates.yaml` must exist with one deplo
+    At least, a `templates.yaml` must exist with one `deploy`
+
+    TODO: Write a dedicated documentation for templates
 
     ```yaml
     ---
@@ -143,8 +144,21 @@ NOTE: Replace any `<*>` to match your need.
           chmod:  0755 # optional. support chmod octal representation only. valid for `source` or `template` file type.
           if:        # Optional. A template string. If is true if the result of this template return a non null string. 
                      # valid for `source` or `template` file type.
-        my 2nd file: # Seconf use case: Generate a file from template directory and deployment template data (<plugin>.yaml explained later).
+        my 2nd file: # Second use case: Generate a file from template directory and deployment template data (<plugin>.yaml explained later).
           template: relative/path/to/my/template/file # template relative file path to a source template file used to generate this file.
+                     # A template file must contains at least {{ }} tag for template replacement. You can change the tag with `tags`.
+          tags: # string which describes a template tag to use. By default, it uses {{}}. The string is cut in 2 sub strings of same size.
+                # The first one is the opened tag like '{{'
+                # The second one the closed tag like '}}'
+        my 3rd file: # Warning! Use `built` with caution. It can introduce code which were never controlled when source files depends on non resilient resources.
+                     # third use case: Generate a file thanks to --<jenkinsAppName>-run-task in the application deployment repository.
+          built: my/file.lst # application deployment repository relative file path where run-task has generated the file.
+                     # A template file must contains at least {{ }} tag for template replacement. You can change the tag with `tags`.
+          tags: # string which describes a template tag to use. By default, it uses {{}}. The string is cut in 2 sub strings of same size.
+                # The first one is the opened tag like '{{'
+                # The second one the closed tag like '}}'
+        my 4th file: # fourth use case: Generate a file thanks to --<jenkinsAppName>-run-task in the source repository, then copy it to the deployment repo.
+          generated: my/file.lst # application repository source relative file path.
                      # A template file must contains at least {{ }} tag for template replacement. You can change the tag with `tags`.
           tags: # string which describes a template tag to use. By default, it uses {{}}. The string is cut in 2 sub strings of same size.
                 # The first one is the opened tag like '{{'
