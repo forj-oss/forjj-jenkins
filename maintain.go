@@ -65,7 +65,7 @@ func (r *MaintainReq) Instantiate(req *MaintainReq, ret *goforjj.PluginData) (_ 
 		if p.run.RunCommand == "" {
 			log.Printf("yaml:/run is depreciated. Use yaml:/steps and yaml:/tasks")
 		}
-		if err := p.run.run(instance, p.source_path, p.deployPath, p.Model(), p.auths); err != nil {
+		if err := p.run.run(instance, p.source_path, p.deployPath, p.Model(), p.auths, func() error { return nil }); err != nil {
 			log.Errorf("Unable to instantiate to %s. %s", p.yaml.Deploy.Deployment.To, err)
 			return
 		}
@@ -99,7 +99,7 @@ func (r *MaintainReq) runSteps(steps []string, tasks map[string]RunStruct, model
 			return
 		}
 
-		if err = step.run(instance, jp.source_path, jp.deployPath, jp.Model(), jp.auths); err != nil {
+		if err = step.run(instance, jp.source_path, jp.deployPath, jp.Model(), jp.auths, func() error { return nil }); err != nil {
 			err = fmt.Errorf("Unable to build %s to %s. %s", stepName, jp.yaml.Deploy.Deployment.To, err)
 			return
 		}
