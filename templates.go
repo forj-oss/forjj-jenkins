@@ -84,7 +84,7 @@ func Evaluate(value string, data interface{}) (string, error) {
 	return ret, nil
 }
 
-//Load templates definition file from template dir.
+// LoadTemplatesDef Load templates definition file from template dir.
 func (p *JenkinsPlugin) LoadTemplatesDef() error {
 	templatef := path.Join(p.template_dir, template_file)
 	if _, err := os.Stat(templatef); err != nil {
@@ -95,13 +95,25 @@ func (p *JenkinsPlugin) LoadTemplatesDef() error {
 		return fmt.Errorf("Unable to load '%s'. %s.", templatef, err)
 	} else {
 		if err := yaml.Unmarshal(d, &p.templates_def); err != nil {
-			return fmt.Errorf("Unable to load yaml file format '%s'. %s.", templatef, err)
+			return fmt.Errorf("Unable to load yaml file format '%s'. %s", templatef, err)
 		}
+
+		for deployTo, run := range p.templates_def.Run {
+			if err := run.Validate() ; err != nil {
+				return fmt.Errorf("In %s, run_deploy/%s has an issue. %s", templatef, deployTo, err)
+			}
+		} 
+
+		for deployTo, run := range p.templates_def.Build {
+			if err := run.Validate() ; err != nil {
+				return fmt.Errorf("In %s, run_build/%s has an issue. %s", templatef, deployTo, err)
+			}
+		} 
 	}
 	return nil
 }
 
-// Load list of files to copy and files to generate
+// DefineSources Load list of files to copy and files to generate
 func (p *JenkinsPlugin) DefineSources() error {
 	// load all features
 	p.yaml.Features = make([]string, 0, 5)
@@ -160,8 +172,19 @@ func (p *JenkinsPlugin) DefineSources() error {
 			p.built[file] = f
 			log.Printf("BUILT: selected: %s", file)
 		} else if f.Generated != "" {
+			if f.GeneratedTask == "" {
+				return fmt.Errorf("'%s' is defined as generated from a build task. You missed to set the build task name which generate it. Please update it by setting 'from-task'", file)
+			}
+
+			deployTo := p.yaml.Deploy.Deployment.To
+
+			if tasks, found := p.templates_def.Build[deployTo] ; ! found {
+				return fmt.Errorf("'%s' is defined as generated from a build task. But there is no task currently defined for deployment '%s'. You must create /run_build/%s/tasks", file, deployTo, deployTo)
+			} else if _, found = tasks.Tasks[f.GeneratedTask] ; !found {
+				return fmt.Errorf("'%s' is defined as generated from a build task. But there is no task '%s'. You must create /run_build/%s/tasks/%s", file, f.GeneratedTask, deployTo, deployTo)
+			}
 			p.generated[file] = f
-			log.Printf("GENERATED: selected: %s", file)
+			log.Printf("GENERATED from %s: selected: %s", f.GeneratedTask, file)
 			f.storeMD5(path.Join(p.source_path, f.Generated))
 		}
 		return nil

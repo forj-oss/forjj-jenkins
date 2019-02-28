@@ -49,17 +49,12 @@ func DoCreate(r *http.Request, req *CreateReq, ret *goforjj.PluginData) (httpCod
 
 	p.auths = NewDockerAuths(req.Objects.App[p.InstanceName].RegistryAuth)
 
-	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, true); err != nil {
+	if err := p.runBuildTasks(ret, nil, req.Forj.ForjjUsername, req.Creds, true); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
 
 	if err := p.addBuiltFiles(ret, nil); err != nil {
-		log.Errorf("%s", err)
-		return
-	}
-
-	if err := p.addGeneratedFiles(ret, nil); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
@@ -135,7 +130,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 
 	p.setRunTasks(req.Forj.RunTasks)
 
-	if err := p.runBuildDeploy(req.Forj.ForjjUsername, req.Creds, false); err != nil {
+	if err := p.runBuildTasks(ret, &updated, req.Forj.ForjjUsername, req.Creds, false); err != nil {
 		log.Errorf("%s", err)
 		return
 	}
@@ -144,10 +139,7 @@ func DoUpdate(r *http.Request, req *UpdateReq, ret *goforjj.PluginData) (_ int) 
 		log.Errorf("%s", err)
 		return
 	}
-	if err := p.addGeneratedFiles(ret, &updated); err != nil {
-		log.Errorf("%s", err)
-		return
-	}
+
 	if p.saveYaml(goforjj.FilesSource, jenkins_file, &p.yamlPlugin, ret, &updated) != nil {
 		return
 	}

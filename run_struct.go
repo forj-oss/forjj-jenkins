@@ -13,6 +13,7 @@ type RunStruct struct {
 	Description string
 	Env         map[string]EnvStruct `yaml:"environment"`
 	Files       RunFilesStruct
+	DependsOn   []string `yaml:"depends-on"`
 }
 
 // run execute the defined command with the context model and docker authentication given
@@ -20,8 +21,14 @@ type RunStruct struct {
 // Use reportLog or Errorf to report to the end users.
 // But errors detected is not interrupting the program immediatelly in order to report all issues to
 // fix
-func (r RunStruct) run(instance, sourcePath, deployPath string, model *JenkinsPluginModel, auths *DockerAuths) (err error) {
+func (r RunStruct) run(instance, sourcePath, deployPath string, model *JenkinsPluginModel, auths *DockerAuths, copyDependentFiles func() (error)) (err error) {
 	// start a command as described by the source code.
+
+	log.Printf("Checking dependent generated tasks files")
+
+	if err = copyDependentFiles() ; err != nil {
+		return fmt.Errorf("Unable to run '%s'. %s", r.RunCommand, err)
+	}
 
 	// Errors detected if true.
 	log.Printf("Checking command to run and context")
@@ -62,6 +69,8 @@ func (r RunStruct) run(instance, sourcePath, deployPath string, model *JenkinsPl
 		}, "-c", r.RunCommand)
 
 	r.Files.deleteFiles()
+
+	log.Reportf("'%s' done", r.RunCommand)
 
 	return
 }

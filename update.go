@@ -22,11 +22,6 @@ func (jp *JenkinsPlugin) update_jenkins_sources(ret *goforjj.PluginData, updated
 		return
 	}
 
-	log.Printf("Start copying existing tasks generated source files...")
-	if err = jp.copyGeneratedSourceFiles(ret, updated); err != nil {
-		return
-	}
-
 	log.Printf("Start Generating source files...")
 	if err = jp.generate_source_files(ret, updated); err != nil {
 		return
@@ -83,7 +78,7 @@ func (jp *JenkinsPlugin) update_projects(req *UpdateReq, ret *goforjj.PluginData
 	return projects.set_projects_to(req.Objects.Projects, jp, ret, status, req.Forj.ForjjInfra, instanceData.JenkinsfilePath)
 }
 
-func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string, createSteps bool) (err error) {
+func (jp *JenkinsPlugin) runBuildTasks(ret *goforjj.PluginData, updated *bool, username string, creds map[string]string, createSteps bool) (err error) {
 	deployTo := jp.yaml.Deploy.Deployment.To
 	run, found := jp.templates_def.Build[deployTo]
 	if !found {
@@ -112,7 +107,7 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 		if run.RunCommand == "" {
 			log.Printf("yaml:/run_build/%s/run is depreciated. Use yaml:/run_build/%s/steps and yaml:/run_build/%s/tasks", deployTo, deployTo, deployTo)
 		}
-		if err = run.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
+		if err = run.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths, func() error { return nil }); err != nil {
 			log.Errorf("Unable to build to %s. %s", jp.yaml.Deploy.Deployment.To, err)
 		}
 		return
@@ -123,15 +118,15 @@ func (jp *JenkinsPlugin) runBuildDeploy(username string, creds map[string]string
 			return
 		}
 
-		jp.runSteps(deployTo, runFailureSteps, run.Tasks, model)
+		jp.runSteps(ret, updated, deployTo, runFailureSteps, run.Tasks, model)
 	}()
 
-	err = jp.runSteps(deployTo, runNormalSteps, run.Tasks, model)
+	err = jp.runSteps(ret, updated, deployTo, runNormalSteps, run.Tasks, model)
 
 	return
 }
 
-func (jp *JenkinsPlugin) runSteps(deployTo string, steps []string, tasks map[string]RunStruct, model *JenkinsPluginModel) (err error) {
+func (jp *JenkinsPlugin) runSteps(ret *goforjj.PluginData, updated *bool, deployTo string, steps []string, tasks map[string]RunStruct, model *JenkinsPluginModel) (err error) {
 	tasksList := "None"
 	if len(tasks) > 0 {
 		for name, task := range tasks {
@@ -152,7 +147,20 @@ func (jp *JenkinsPlugin) runSteps(deployTo string, steps []string, tasks map[str
 			return
 		}
 
-		if err = step.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths); err != nil {
+		err = step.run(jp.InstanceName, jp.source_path, jp.deployPath, model, jp.auths, func() error {
+			recurse := newLoopDetect(func(element string) (elements []string) {
+				run, found := tasks[element]
+				if !found {
+					return
+				}
+				return run.DependsOn
+			})
+
+			return recurse.run(stepName, func(taskName string) error {
+				return jp.addGeneratedFilesFor(taskName, ret, updated)
+			})
+		})
+		if err != nil {
 			err = fmt.Errorf("Unable to build %s to %s. %s", stepName, jp.yaml.Deploy.Deployment.To, err)
 			return
 		}
